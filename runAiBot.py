@@ -601,7 +601,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                     elif 'week' in label:
                         answer = notice_period_weeks
                     else: answer = notice_period
-                elif 'salary' in label or 'compensation' in label or 'ctc' in label or 'pay' in label: 
+                elif 'salary' in label or 'compensation' in label or 'ctc' in label or 'ctoc' in label or 'pay' in label: 
                     if 'current' in label or 'present' in label:
                         if 'month' in label:
                             answer = current_ctc_monthly
@@ -745,7 +745,10 @@ def external_apply(pagination_element: WebElement, job_id: str, job_link: str, r
     global tabs_count, dailyEasyApplyLimitReached
     if easy_apply_only:
         try:
-            if "exceeded the daily application limit" in driver.find_element(By.CLASS_NAME, "artdeco-inline-feedback__message").text: dailyEasyApplyLimitReached = True
+            if "exceeded the daily application limit" in driver.find_element(By.CLASS_NAME, "artdeco-inline-feedback__message").text: 
+                dailyEasyApplyLimitReached = True
+                # Log this to a separate file without console output
+                log_to_file_only("Daily application limit exceeded for LinkedIn Easy Apply", file_name="limit_log.txt")
         except: pass
         print_lg("Easy apply failed I guess!")
         if pagination_element != None: return True, application_link, tabs_count

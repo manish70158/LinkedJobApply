@@ -99,6 +99,29 @@ def print_lg(*msgs: str | dict, end: str = "\n", pretty: bool = False, flush: bo
         alert(f"log.txt in {logs_folder_path} is open or is occupied by another program! Please close it! {trail}", "Failed Logging")
         if not from_critical:
             critical_error_log("Log.txt is open or is occupied by another program!", e)
+
+def log_to_file_only(*msgs: str | dict, end: str = "\n", file_name: str = None) -> None:
+    '''
+    Function to log messages to a file only (no console output)
+    * msgs: Messages to log
+    * end: End character
+    * file_name: Optional specific log file name (will be placed in logs folder)
+    '''
+    try:
+        log_path = __logs_file_path
+        if file_name:
+            log_path = logs_folder_path + "/" + file_name
+            log_path = log_path.replace("//", "/")
+            
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(log_path, 'a+', encoding="utf-8") as file:
+            file.write(f"[{timestamp}] ")
+            for message in msgs:
+                file.write(str(message) + " ")
+            file.write(end)
+    except Exception as e:
+        # Silent exception - don't show alerts for file-only logs
+        pass
 #>
 
 

@@ -133,14 +133,14 @@ current_city = ""                  # If left empty will fill in location of jobs
 
 ## SOME ANNOYING QUESTIONS BY COMPANIES 🫠 ##
 # Address, not so common question but some job applications make it required!
-street = "123 Main Street"
-state = "STATE"
-zipcode = "12345"
-country = "Will Let You Know When Established"
+street = "Sector 14"
+state = "Haryana"
+zipcode = "122001"
+country = "India"
 
-first_name = "Sai"                 # Your first name in quotes Eg: "First", "Sai"
-middle_name = "Vignesh"            # Your name in quotes Eg: "Middle", "Vignesh", ""
-last_name = "Golla"                # Your last name in quotes Eg: "Last", "Golla"
+first_name = "Manish"                 # Your first name in quotes Eg: "First", "Sai"
+middle_name = ""            # Your name in quotes Eg: "Middle", "Vignesh", ""
+last_name = "Kumar"                # Your last name in quotes Eg: "Last", "Golla"
 
 # Your LinkedIn headline in quotes Eg: "Software Engineer @ Google, Masters in Computer Science", "Recent Grad Student @ MIT, Computer Science"
 headline = "Headline"
@@ -159,12 +159,12 @@ recent_employer = "Not Applicable" # "", "Lala Company", "Google", "Snowflake", 
 ethnicity = "Decline"              # "Decline", "Hispanic/Latino", "American Indian or Alaska Native", "Asian", "Black or African American", "Native Hawaiian or Other Pacific Islander", "White", "Other"
 
 # How do you identify yourself? If left empty as "", tool will not answer the question. However, note that some companies make compulsory to be answered
-gender = "Decline"                 # "Male", "Female", "Other", "Decline" or ""
+gender = "Male"                 # "Male", "Female", "Other", "Decline" or ""
 
 # Are you physically disabled or have a history/record of having a disability? If left empty as "", tool will not answer the question. However, note that some companies make it compulsory to be answered
-disability_status = "Decline"      # "Yes", "No", "Decline"
+disability_status = "No"      # "Yes", "No", "Decline"
 
-veteran_status = "Decline"         # "Yes", "No", "Decline"
+veteran_status = "No"         # "Yes", "No", "Decline"
 ##
 
 

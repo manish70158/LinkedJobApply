@@ -17,10 +17,10 @@ version:    24.12.29.12.30
 
 # These Sentences are Searched in LinkedIn
 # Enter your search terms inside '[ ]' with quotes ' "searching title" ' for each search followed by comma ', ' Eg: ["Software Engineer", "Software Developer", "Selenium Developer"]
-search_terms = ["Java Developer", "Backend Developer", "Java Spring Developer", "Software Engineer", "Full Stack Java Developer", "Spring Boot Developer", "API Developer", "Microservices Developer", "Software Developer", "Cloud Developer", "Java Microservices", "AWS Java Developer"]
+search_terms = ["Java Engineer","Java Developer", "Backend Developer", "Backend Engineer", "Java Spring Developer", "Software Engineer", "Full Stack Java Developer", "Spring Boot Developer", "API Developer", "Microservices Developer", "Software Developer", "Java Microservices", "AWS Java Developer","Java Full Stack Developer", "Java Backend Developer", "Java Software Engineer", "Java Spring Boot Developer", "Java REST API Developer", "Java Microservices Developer", "Java Cloud Engineer", "Java Application Developer", "Java Solutions Engineer", "Java Systems Engineer", "Java Integration Developer", "Java Platform Engineer", "Java DevOps Engineer"]  # Add your search terms here. Note: Don't put in quotes for the list itself, but put in quotes for each search term inside the list.
 
 # Search location, this will be filled in "City, state, or zip code" search box. If left empty as "", tool will not fill it.
-search_location = "India"               # Some valid examples: "", "United States", "India", "Chicago, Illinois, United States", "90001, Los Angeles, California, United States", "Bengaluru, Karnataka, India", etc.
+search_location = ""               # Some valid examples: "", "United States", "India", "Chicago, Illinois, United States", "90001, Los Angeles, California, United States", "Bengaluru, Karnataka, India", etc.
 
 # After how many number of applications in current search should the bot switch to next search? 
 switch_number = 30                 # Only numbers greater than 0... Don't put in quotes
@@ -46,23 +46,23 @@ This is below format: QUESTION = VALID_ANSWER
 
 '''
 
-sort_by = "Most recent"                       # "Most recent", "Most relevant" or ("" to not select) 
+sort_by = "Most relevant"                       # "Most recent", "Most relevant" or ("" to not select) 
 date_posted = "Past week"                    # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select)
-salary = "$80,000+"                           # "$40,000+", "$60,000+", "$80,000+", "$100,000+", "$120,000+", "$140,000+", "$160,000+", "$180,000+", "$200,000+"
+salary = ""                           # "$40,000+", "$60,000+", "$80,000+", "$100,000+", "$120,000+", "$140,000+", "$160,000+", "$180,000+", "$200,000+"
 
 easy_apply_only = True                        # True or False, Note: True or False are case-sensitive
 
-experience_level = ["Entry level", "Associate", "Mid-Senior level"]              # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
-job_type = ["Full-time", "Contract"]          # (multiple select) "Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship", "Other"
-on_site = ["Remote", "Hybrid"]                # (multiple select) "On-site", "Remote", "Hybrid"
+experience_level = []              # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
+job_type = ["Full-time"]          # (multiple select) "Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship", "Other"
+on_site = ["Remote", "Hybrid", "On-site"]                # (multiple select) "On-site", "Remote", "Hybrid"
 
 companies = []                     # (dynamic multiple select) make sure the name you type in list exactly matches with the company name you're looking for, including capitals. 
                                    # Eg: "7-eleven", "Google","X, the moonshot factory","YouTube","CapitalG","Adometry (acquired by Google)","Meta","Apple","Byte Dance","Netflix", "Snowflake","Mineral.ai","Microsoft","JP Morgan","Barclays","Visa","American Express", "Snap Inc", "JPMorgan Chase & Co.", "Tata Consultancy Services", "Recruiting from Scratch", "Epic", and so on...
-location = ["Bangalore", "Hyderabad", "Pune", "Mumbai", "Delhi"]                      # (dynamic multiple select)
-industry = ["Information Technology & Services", "Computer Software", "Financial Services"]                      # (dynamic multiple select)
+location = ["Bangalore","Bengaluru", "Hyderabad", "Pune", "Delhi", "Gurugram", "Gurgaon"]                      # (dynamic multiple select)
+industry = ["Information Technology & Services", "Computer Software", "Financial Services","Technology, Information and Internet","Technology, Information and Media","Information Services","IT Services and IT Consulting"]                      # (dynamic multiple select)
 job_function = ["Engineering", "Information Technology"]                  # (dynamic multiple select)
 job_titles = []                    # (dynamic multiple select)
-benefits = ["Remote", "Flexible work schedule"]                      # (dynamic multiple select)
+benefits = []                      # (dynamic multiple select)
 commitments = []                   # (dynamic multiple select)
 
 under_10_applicants = False        # True or False, Note: True or False are case-sensitive
@@ -70,10 +70,12 @@ in_your_network = False            # True or False, Note: True or False are case
 fair_chance_employer = False       # True or False, Note: True or False are case-sensitive
 
 
+job_application_notifications = True
+
 ## >>>>>>>>>>> RELATED SETTING <<<<<<<<<<<
 
 # Pause after applying filters to let you modify the search results and filters?
-pause_after_filters = True         # True or False, Note: True or False are case-sensitive
+pause_after_filters = False         # True or False, Note: True or False are case-sensitive
 
 ##
 

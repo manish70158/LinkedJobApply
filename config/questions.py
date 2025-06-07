@@ -103,7 +103,7 @@ Cover Letter
 # Your user_information_all letter in quotes, use \n to add line breaks if using single quotes "user_information_all".You can skip \n if using triple quotes """user_information_all""" (This question makes sense though)
 # We use this to pass to AI to generate answer from information , Assuing Information contians eg: resume  all the information like name, experience, skills, Country, any illness etc. 
 user_information_all ="""
-User Information
+Manish Kumar is a seasoned technology professional with 13 years of experience, currently working as a Tech Lead at Optum Global (United Health Group) in Gurugram, Haryana. Over his career, he has worked across diverse domains including health insurance, event management, and travel technology, with 8 years as an individual contributor and 5 years leading a team of 5 engineers. His previous roles at AirAsia Technology, Nagarro, Accenture, Ozemio, NetEdge Computing Services, and IdeaFarm Technology have seen him deliver impactful solutions such as re-architecting cost estimation modules, enhancing search functionalities, implementing microservices architectures, and integrating CI/CD pipelines. He is proficient in Java, SpringBoot, React, JavaScript, Terraform, and SQL, and experienced with tools and platforms like AWS, Kubernetes, Docker, Kafka, and databases including MS SQL, PostgreSQL, MongoDB, and ElasticSearch. Manish holds a B.Tech in Computer Science Engineering from Vaish College of Engineering, Rohtak, with a 74% score. Known for his leadership, problem-solving skills, and innovation, he has improved system performance, reduced deployment times, and contributed to revenue growth through technical excellence. He is based in India and has no disclosed health conditions.
 """
 ##<
 '''
@@ -123,14 +123,14 @@ confidence_level = "8"             # Any number between "1" to "10" including 1 
 
 ## Allow Manual Inputs
 # Should the tool pause before every submit application during easy apply to let you check the information?
-pause_before_submit = True         # True or False, Note: True or False are case-sensitive
+pause_before_submit = False         # True or False, Note: True or False are case-sensitive
 '''
 Note: Will be treated as False if `run_in_background = True`
 '''
 
 # Should the tool pause if it needs help in answering questions during easy apply?
 # Note: If set as False will answer randomly...
-pause_at_failed_question = True    # True or False, Note: True or False are case-sensitive
+pause_at_failed_question = False    # True or False, Note: True or False are case-sensitive
 '''
 Note: Will be treated as False if `run_in_background = True`
 '''
