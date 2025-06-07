@@ -35,6 +35,7 @@ from config.search import *
 from config.secrets import use_AI, username, password, ai_provider
 from config.settings import *
 
+from modules.ai.ollamaConnections import ollama_answer_question, ollama_create_client, ollama_extract_skills
 from modules.open_chrome import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
@@ -632,6 +633,8 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                                 answer = ai_answer_question(aiClient, label_org, question_type="text", job_description=job_description, user_information_all=user_information_all)
                             elif ai_provider.lower() == "deepseek":
                                 answer = deepseek_answer_question(aiClient, label_org, options=None, question_type="text", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "ollama":
+                                answer = ollama_answer_question(aiClient, label_org, options=None, question_type="text", job_description=job_description, about_company=None, user_information_all=user_information_all)
                             else:
                                 randomly_answered_questions.add((label_org, "text"))
                                 answer = years_of_experience
@@ -676,6 +679,8 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                                 answer = ai_answer_question(aiClient, label_org, question_type="textarea", job_description=job_description, user_information_all=user_information_all)
                             elif ai_provider.lower() == "deepseek":
                                 answer = deepseek_answer_question(aiClient, label_org, options=None, question_type="textarea", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "ollama":
+                                answer = ollama_answer_question(aiClient, label_org, options=None, question_type="textarea", job_description=job_description, about_company=None, user_information_all=user_information_all)
                             else:
                                 randomly_answered_questions.add((label_org, "textarea"))
                                 answer = ""
@@ -971,6 +976,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                 skills = ai_extract_skills(aiClient, description)
                             elif ai_provider.lower() == "deepseek":
                                 skills = deepseek_extract_skills(aiClient, description)
+                            elif ai_provider.lower() == "ollama":
+                                skills = ollama_extract_skills(aiClient, description)
                             else:
                                 skills = "In Development"
                             print_lg(f"Extracted skills using {ai_provider} AI")
@@ -1106,6 +1113,19 @@ def run(total_runs: int) -> int:
 chatGPT_tab = False
 linkedIn_tab = False
 
+def ai_close_ollama_client(client):
+    """
+    Function to close an OpenAI client.
+    * Takes in `client` of type `OpenAI`
+    * Returns no value
+    """
+    try:
+        if client:
+            print_lg("Closing Ollama client...")
+            client.close()
+    except Exception as e:
+        ai_error_alert("Error occurred while closing Ollama client.", e)
+
 def main() -> None:
     try:
         global linkedIn_tab, tabs_count, useNewResume, aiClient
@@ -1142,6 +1162,8 @@ def main() -> None:
                 aiClient = ai_create_openai_client()
             elif ai_provider.lower() == "deepseek":
                 aiClient = deepseek_create_client()
+            elif ai_provider.lower() == "ollama":
+                aiClient = ollama_create_client()
             else:
                 print_lg(f"Unknown AI provider: {ai_provider}. Supported providers are: openai, deepseek")
                 aiClient = None
@@ -1205,6 +1227,9 @@ def main() -> None:
                     ai_close_openai_client(aiClient)
                 elif ai_provider.lower() == "deepseek":
                     ai_close_openai_client(aiClient)  
+                elif ai_provider.lower() == "ollama":
+                    ai_close_ollama_client(aiClient)  
+                
                 print_lg(f"Closed {ai_provider} AI client.")
             except Exception as e:
                 print_lg("Failed to close AI client:", e)
