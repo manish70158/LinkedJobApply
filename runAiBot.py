@@ -17,7 +17,38 @@ version:    24.12.29.12.30
 import os
 import csv
 import re
-import pyautogui
+import sys
+
+# Check if we're running in a headless environment like GitHub Actions
+RUNNING_IN_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
+
+if RUNNING_IN_ACTIONS:
+    # Create a mock PyAutoGUI module for GitHub Actions
+    class MockPyAutoGUI:
+        FAILSAFE = False
+        
+        @staticmethod
+        def alert(text=None, title=None, button=None):
+            print(f"MOCK ALERT: {title} - {text} - {button}")
+            return button
+            
+        @staticmethod
+        def confirm(text=None, title=None, buttons=None):
+            print(f"MOCK CONFIRM: {title} - {text} - {buttons}")
+            # Always choose the last option (typically continue or submit)
+            return buttons[-1] if buttons else None
+            
+        @staticmethod
+        def press(key):
+            print(f"MOCK KEY PRESS: {key}")
+            return None
+    
+    # Replace the actual PyAutoGUI with our mock
+    sys.modules['pyautogui'] = MockPyAutoGUI()
+    pyautogui = MockPyAutoGUI()
+    print("Running in headless environment. Using mock PyAutoGUI.")
+else:
+    import pyautogui
 
 from random import choice, shuffle, randint
 from datetime import datetime
