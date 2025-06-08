@@ -1,0 +1,1249 @@
+[2025-06-08 15:52:25Z INFO HostContext] No proxy settings were found based on environmental variables (http_proxy/https_proxy/HTTP_PROXY/HTTPS_PROXY)
+[2025-06-08 15:52:25Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:25Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:25Z INFO HostContext] Well known config file 'Credentials': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.credentials'
+[2025-06-08 15:52:28Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:28Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:28Z INFO HostContext] Well known config file 'Runner': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.runner'
+[2025-06-08 15:52:28Z INFO Worker] Version: 2.325.0
+[2025-06-08 15:52:28Z INFO Worker] Commit: 71ed7cd46223bd5d61633445946813012b502d54
+[2025-06-08 15:52:28Z INFO Worker] Culture: en-US
+[2025-06-08 15:52:28Z INFO Worker] UI Culture: en-US
+[2025-06-08 15:52:28Z INFO Worker] Waiting to receive the job message from the channel.
+[2025-06-08 15:52:28Z INFO ProcessChannel] Receiving message of length 20265, with hash 'c9a30ceda88a35a90ba2eaff7bb0a2c7e2e8cb884f85a7e72bf227be495e15b0'
+[2025-06-08 15:52:28Z INFO Worker] Message received.
+[2025-06-08 15:52:29Z INFO Worker] Job message:
+ {
+  "fileTable": [
+    ".github/workflows/auto_apply.yml"
+  ],
+  "mask": [
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    }
+  ],
+  "steps": [
+    {
+      "type": "action",
+      "reference": {
+        "type": "repository",
+        "name": "actions/checkout",
+        "ref": "v4",
+        "repositoryType": "GitHub"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 16,
+        "col": 15,
+        "lit": "Checkout repository"
+      },
+      "contextName": "__actions_checkout",
+      "inputs": {
+        "type": 2,
+        "file": 1,
+        "line": 19,
+        "col": 11,
+        "map": [
+          {
+            "key": {
+              "type": 0,
+              "file": 1,
+              "line": 19,
+              "col": 11,
+              "lit": "fetch-depth"
+            },
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 19,
+              "col": 24,
+              "lit": "1"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "4a4d31fc-8a9c-47d8-b4fa-6c3f08c844ba",
+      "name": "__actions_checkout"
+    },
+    {
+      "type": "action",
+      "reference": {
+        "type": "script"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 22,
+        "col": 15,
+        "lit": "Set up Python"
+      },
+      "contextName": "__run",
+      "inputs": {
+        "type": 2,
+        "map": [
+          {
+            "key": "script",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 23,
+              "col": 14,
+              "lit": "# Check if Python is already installed\npython3 --version || echo \"Python needs to be installed manually\"\n"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "ae1beeab-9e4a-4eb5-aef4-cda7b8579163",
+      "name": "__run"
+    },
+    {
+      "type": "action",
+      "reference": {
+        "type": "script"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 27,
+        "col": 15,
+        "lit": "Install dependencies"
+      },
+      "contextName": "__run_2",
+      "inputs": {
+        "type": 2,
+        "map": [
+          {
+            "key": "script",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 28,
+              "col": 14,
+              "lit": "python3 -m pip install --upgrade pip\npython3 -m pip install undetected-chromedriver pyautogui setuptools google-generativeai openai flask-cors flask\n"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "27f53649-0276-44ec-9b77-310ce1ca7b52",
+      "name": "__run_2"
+    },
+    {
+      "type": "action",
+      "reference": {
+        "type": "script"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 35,
+        "col": 15,
+        "lit": "Prepare config files"
+      },
+      "contextName": "__run_3",
+      "inputs": {
+        "type": 2,
+        "map": [
+          {
+            "key": "script",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 36,
+              "col": 14,
+              "lit": "# Update configuration files as needed\nsed -i '' \"s/gemini_api_key = \\\"YOUR_GEMINI_API_KEY\\\"/gemini_api_key = os.environ.get(\\\"GEMINI_API_KEY\\\", \\\"\\\")/g\" config/secrets.py\n# Only disable pause options if running in fully automated mode\n# sed -i '' \"s/pause_at_failed_question = True/pause_at_failed_question = False/g\" config/settings.py\n# sed -i '' \"s/pause_before_submit = True/pause_before_submit = False/g\" config/settings.py\n"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "60097afc-3433-49d9-b6eb-f52cb4fda8e4",
+      "name": "__run_3"
+    },
+    {
+      "type": "action",
+      "reference": {
+        "type": "script"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 43,
+        "col": 15,
+        "lit": "Run LinkedIn Auto Job Applier"
+      },
+      "contextName": "__run_4",
+      "environment": {
+        "type": 2,
+        "file": 1,
+        "line": 45,
+        "col": 11,
+        "map": [
+          {
+            "key": {
+              "type": 0,
+              "file": 1,
+              "line": 45,
+              "col": 11,
+              "lit": "GEMINI_API_KEY"
+            },
+            "value": {
+              "type": 3,
+              "file": 1,
+              "line": 45,
+              "col": 27,
+              "expr": "secrets.GEMINI_API_KEY"
+            }
+          },
+          {
+            "key": {
+              "type": 0,
+              "file": 1,
+              "line": 46,
+              "col": 11,
+              "lit": "LN_USERNAME"
+            },
+            "value": {
+              "type": 3,
+              "file": 1,
+              "line": 46,
+              "col": 24,
+              "expr": "secrets.LN_USERNAME"
+            }
+          },
+          {
+            "key": {
+              "type": 0,
+              "file": 1,
+              "line": 47,
+              "col": 11,
+              "lit": "LN_PASSWORD"
+            },
+            "value": {
+              "type": 3,
+              "file": 1,
+              "line": 47,
+              "col": 24,
+              "expr": "secrets.LN_PASSWORD"
+            }
+          }
+        ]
+      },
+      "inputs": {
+        "type": 2,
+        "map": [
+          {
+            "key": "script",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 48,
+              "col": 14,
+              "lit": "# Replace hardcoded credentials with environment variables if they exist\nif [ ! -z \"$LN_USERNAME\" ]; then\n  sed -i '' \"s/username = \\\".*\\\"/username = \\\"$LN_USERNAME\\\"/g\" config/secrets.py\nfi\n\nif [ ! -z \"$LN_PASSWORD\" ]; then\n  sed -i '' \"s/password = \\\".*\\\"/password = \\\"$LN_PASSWORD\\\"/g\" config/secrets.py\nfi\n\n# Run the application\npython3 runAiBot.py\n"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "d3258e7b-66c3-4dce-b88c-1070037a4132",
+      "name": "__run_4"
+    }
+  ],
+  "variables": {
+    "Actions.EnableHttpRedirects": {
+      "value": "true"
+    },
+    "DistributedTask.AddWarningToNode12Action": {
+      "value": "true"
+    },
+    "DistributedTask.AddWarningToNode16Action": {
+      "value": "true"
+    },
+    "DistributedTask.AllowRunnerContainerHooks": {
+      "value": "true"
+    },
+    "DistributedTask.DeprecateStepOutputCommands": {
+      "value": "true"
+    },
+    "DistributedTask.DetailUntarFailure": {
+      "value": "true"
+    },
+    "DistributedTask.EnableCompositeActions": {
+      "value": "true"
+    },
+    "DistributedTask.EnableJobServerQueueTelemetry": {
+      "value": "true"
+    },
+    "DistributedTask.EnhancedAnnotations": {
+      "value": "true"
+    },
+    "DistributedTask.ForceGithubJavascriptActionsToNode16": {
+      "value": "true"
+    },
+    "DistributedTask.ForceGithubJavascriptActionsToNode20": {
+      "value": "true"
+    },
+    "DistributedTask.LogTemplateErrorsAsDebugMessages": {
+      "value": "true"
+    },
+    "DistributedTask.MarkJobAsFailedOnWorkerCrash": {
+      "value": "true"
+    },
+    "DistributedTask.NewActionMetadata": {
+      "value": "true"
+    },
+    "DistributedTask.UploadStepSummary": {
+      "value": "true"
+    },
+    "DistributedTask.UseActionArchiveCache": {
+      "value": "true"
+    },
+    "DistributedTask.UseWhich2": {
+      "value": "true"
+    },
+    "RunService.FixEmbeddedIssues": {
+      "value": "true"
+    },
+    "actions_add_check_run_id_to_job_context": {
+      "value": "false"
+    },
+    "actions_display_helpful_actions_download_errors": {
+      "value": "true"
+    },
+    "actions_skip_retry_complete_job_upon_known_errors": {
+      "value": "true"
+    },
+    "actions_uses_cache_service_v2": {
+      "value": "true"
+    },
+    "github_token": {
+      "value": "***",
+      "isSecret": true
+    },
+    "system.from_run_service": {
+      "value": "true"
+    },
+    "system.github.job": {
+      "value": "job_application"
+    },
+    "system.github.launch_endpoint": {
+      "value": "https://launch.actions.githubusercontent.com"
+    },
+    "system.github.results_endpoint": {
+      "value": "https://results-receiver.actions.githubusercontent.com/"
+    },
+    "system.github.results_upload_with_sdk": {
+      "value": "true"
+    },
+    "system.github.token": {
+      "value": "***",
+      "isSecret": true
+    },
+    "system.github.token.permissions": {
+      "value": "{\"Actions\":\"write\",\"Attestations\":\"write\",\"Checks\":\"write\",\"Contents\":\"write\",\"Deployments\":\"write\",\"Discussions\":\"write\",\"Issues\":\"write\",\"Metadata\":\"read\",\"Models\":\"read\",\"Packages\":\"write\",\"Pages\":\"write\",\"PullRequests\":\"write\",\"RepositoryProjects\":\"write\",\"SecurityEvents\":\"write\",\"Statuses\":\"write\"}"
+    },
+    "system.orchestrationId": {
+      "value": "e8faad93-bd34-49bd-8b9e-d249eaa9747b.job_application.__default"
+    },
+    "system.phaseDisplayName": {
+      "value": "job_application"
+    },
+    "system.runner.lowdiskspacethreshold": {
+      "value": "100"
+    },
+    "system.runnerEnvironment": {
+      "value": "self-hosted"
+    }
+  },
+  "messageType": "RunnerJobRequest",
+  "plan": {
+    "scopeIdentifier": "00000000-0000-0000-0000-000000000000",
+    "planType": "actions",
+    "version": 0,
+    "planId": "e8faad93-bd34-49bd-8b9e-d249eaa9747b",
+    "planGroup": null,
+    "artifactUri": null,
+    "artifactLocation": null,
+    "definition": null,
+    "owner": null
+  },
+  "timeline": {
+    "id": "e8faad93-bd34-49bd-8b9e-d249eaa9747b",
+    "changeId": 0,
+    "location": null
+  },
+  "jobId": "592170c4-9b56-5ee6-a621-dec3b82ddb34",
+  "jobDisplayName": "job_application",
+  "jobName": "__default",
+  "requestId": 0,
+  "lockedUntil": "0001-01-01T00:00:00",
+  "resources": {
+    "endpoints": [
+      {
+        "data": {
+          "ServerId": "",
+          "ServerName": "",
+          "CacheServerUrl": "https://artifactcache.actions.githubusercontent.com/f41TOVmSr8eXu24X2I0ezZmzGJ4bIeVCg1jhqJ0QUIr1FTdXvZ/",
+          "FeedStreamUrl": "wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock",
+          "ResultsServiceUrl": "https://results-receiver.actions.githubusercontent.com/",
+          "PipelinesServiceUrl": "https://pipelinesghubeus9.actions.githubusercontent.com/f41TOVmSr8eXu24X2I0ezZmzGJ4bIeVCg1jhqJ0QUIr1FTdXvZ/",
+          "GenerateIdTokenUrl": ""
+        },
+        "name": "SystemVssConnection",
+        "url": "https://run-actions-1-azure-eastus.actions.githubusercontent.com/54/",
+        "authorization": {
+          "parameters": {
+            "AccessToken": "***"
+          },
+          "scheme": "OAuth"
+        },
+        "isShared": false,
+        "isReady": true
+      }
+    ]
+  },
+  "contextData": {
+    "github": {
+      "t": 2,
+      "d": [
+        {
+          "k": "ref",
+          "v": "refs/heads/main"
+        },
+        {
+          "k": "sha",
+          "v": "c477c3b1486061e31783955d97ad43db6a3c18d1"
+        },
+        {
+          "k": "repository",
+          "v": "manish70158/LinkedJobApply"
+        },
+        {
+          "k": "repository_owner",
+          "v": "manish70158"
+        },
+        {
+          "k": "repository_owner_id",
+          "v": "99177668"
+        },
+        {
+          "k": "repositoryUrl",
+          "v": "git://github.com/manish70158/LinkedJobApply.git"
+        },
+        {
+          "k": "run_id",
+          "v": "15520142729"
+        },
+        {
+          "k": "run_number",
+          "v": "1"
+        },
+        {
+          "k": "retention_days",
+          "v": "90"
+        },
+        {
+          "k": "run_attempt",
+          "v": "1"
+        },
+        {
+          "k": "artifact_cache_size_limit",
+          "v": "10"
+        },
+        {
+          "k": "repository_visibility",
+          "v": "public"
+        },
+        {
+          "k": "actor_id",
+          "v": "99177668"
+        },
+        {
+          "k": "actor",
+          "v": "manish70158"
+        },
+        {
+          "k": "workflow",
+          "v": "LinkedIn Auto Job Applier"
+        },
+        {
+          "k": "head_ref",
+          "v": ""
+        },
+        {
+          "k": "base_ref",
+          "v": ""
+        },
+        {
+          "k": "event_name",
+          "v": "workflow_dispatch"
+        },
+        {
+          "k": "server_url",
+          "v": "https://github.com"
+        },
+        {
+          "k": "api_url",
+          "v": "https://api.github.com"
+        },
+        {
+          "k": "graphql_url",
+          "v": "https://api.github.com/graphql"
+        },
+        {
+          "k": "ref_name",
+          "v": "main"
+        },
+        {
+          "k": "ref_protected",
+          "v": false
+        },
+        {
+          "k": "ref_type",
+          "v": "branch"
+        },
+        {
+          "k": "secret_source",
+          "v": "Actions"
+        },
+        {
+          "k": "event",
+          "v": {
+            "t": 2,
+            "d": [
+              {
+                "k": "inputs",
+                "v": null
+              },
+              {
+                "k": "ref",
+                "v": "refs/heads/main"
+              },
+              {
+                "k": "repository",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "allow_forking",
+                      "v": true
+                    },
+                    {
+                      "k": "archive_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/{archive_format}{/ref}"
+                    },
+                    {
+                      "k": "archived",
+                      "v": false
+                    },
+                    {
+                      "k": "assignees_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/assignees{/user}"
+                    },
+                    {
+                      "k": "blobs_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/git/blobs{/sha}"
+                    },
+                    {
+                      "k": "branches_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/branches{/branch}"
+                    },
+                    {
+                      "k": "clone_url",
+                      "v": "https://github.com/manish70158/LinkedJobApply.git"
+                    },
+                    {
+                      "k": "collaborators_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/collaborators{/collaborator}"
+                    },
+                    {
+                      "k": "comments_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/comments{/number}"
+                    },
+                    {
+                      "k": "commits_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/commits{/sha}"
+                    },
+                    {
+                      "k": "compare_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/compare/{base}...{head}"
+                    },
+                    {
+                      "k": "contents_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/contents/{+path}"
+                    },
+                    {
+                      "k": "contributors_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/contributors"
+                    },
+                    {
+                      "k": "created_at",
+                      "v": "2025-06-07T11:07:04Z"
+                    },
+                    {
+                      "k": "default_branch",
+                      "v": "main"
+                    },
+                    {
+                      "k": "deployments_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/deployments"
+                    },
+                    {
+                      "k": "description",
+                      "v": null
+                    },
+                    {
+                      "k": "disabled",
+                      "v": false
+                    },
+                    {
+                      "k": "downloads_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/downloads"
+                    },
+                    {
+                      "k": "events_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/events"
+                    },
+                    {
+                      "k": "fork",
+                      "v": false
+                    },
+                    {
+                      "k": "forks",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "forks_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "forks_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/forks"
+                    },
+                    {
+                      "k": "full_name",
+                      "v": "manish70158/LinkedJobApply"
+                    },
+                    {
+                      "k": "git_commits_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/git/commits{/sha}"
+                    },
+                    {
+                      "k": "git_refs_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/git/refs{/sha}"
+                    },
+                    {
+                      "k": "git_tags_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/git/tags{/sha}"
+                    },
+                    {
+                      "k": "git_url",
+                      "v": "git://github.com/manish70158/LinkedJobApply.git"
+                    },
+                    {
+                      "k": "has_discussions",
+                      "v": false
+                    },
+                    {
+                      "k": "has_downloads",
+                      "v": true
+                    },
+                    {
+                      "k": "has_issues",
+                      "v": true
+                    },
+                    {
+                      "k": "has_pages",
+                      "v": false
+                    },
+                    {
+                      "k": "has_projects",
+                      "v": true
+                    },
+                    {
+                      "k": "has_wiki",
+                      "v": true
+                    },
+                    {
+                      "k": "homepage",
+                      "v": null
+                    },
+                    {
+                      "k": "hooks_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/hooks"
+                    },
+                    {
+                      "k": "html_url",
+                      "v": "https://github.com/manish70158/LinkedJobApply"
+                    },
+                    {
+                      "k": "id",
+                      "v": 997866098.0
+                    },
+                    {
+                      "k": "is_template",
+                      "v": false
+                    },
+                    {
+                      "k": "issue_comment_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/issues/comments{/number}"
+                    },
+                    {
+                      "k": "issue_events_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/issues/events{/number}"
+                    },
+                    {
+                      "k": "issues_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/issues{/number}"
+                    },
+                    {
+                      "k": "keys_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/keys{/key_id}"
+                    },
+                    {
+                      "k": "labels_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/labels{/name}"
+                    },
+                    {
+                      "k": "language",
+                      "v": "Python"
+                    },
+                    {
+                      "k": "languages_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/languages"
+                    },
+                    {
+                      "k": "license",
+                      "v": {
+                        "t": 2,
+                        "d": [
+                          {
+                            "k": "key",
+                            "v": "agpl-3.0"
+                          },
+                          {
+                            "k": "name",
+                            "v": "GNU Affero General Public License v3.0"
+                          },
+                          {
+                            "k": "node_id",
+                            "v": "MDc6TGljZW5zZTE="
+                          },
+                          {
+                            "k": "spdx_id",
+                            "v": "AGPL-3.0"
+                          },
+                          {
+                            "k": "url",
+                            "v": "https://api.github.com/licenses/agpl-3.0"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "k": "merges_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/merges"
+                    },
+                    {
+                      "k": "milestones_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/milestones{/number}"
+                    },
+                    {
+                      "k": "mirror_url",
+                      "v": null
+                    },
+                    {
+                      "k": "name",
+                      "v": "LinkedJobApply"
+                    },
+                    {
+                      "k": "node_id",
+                      "v": "R_kgDOO3o6cg"
+                    },
+                    {
+                      "k": "notifications_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/notifications{?since,all,participating}"
+                    },
+                    {
+                      "k": "open_issues",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "open_issues_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "owner",
+                      "v": {
+                        "t": 2,
+                        "d": [
+                          {
+                            "k": "avatar_url",
+                            "v": "https://avatars.githubusercontent.com/u/99177668?v=4"
+                          },
+                          {
+                            "k": "events_url",
+                            "v": "https://api.github.com/users/manish70158/events{/privacy}"
+                          },
+                          {
+                            "k": "followers_url",
+                            "v": "https://api.github.com/users/manish70158/followers"
+                          },
+                          {
+                            "k": "following_url",
+                            "v": "https://api.github.com/users/manish70158/following{/other_user}"
+                          },
+                          {
+                            "k": "gists_url",
+                            "v": "https://api.github.com/users/manish70158/gists{/gist_id}"
+                          },
+                          {
+                            "k": "gravatar_id",
+                            "v": ""
+                          },
+                          {
+                            "k": "html_url",
+                            "v": "https://github.com/manish70158"
+                          },
+                          {
+                            "k": "id",
+                            "v": 99177668.0
+                          },
+                          {
+                            "k": "login",
+                            "v": "manish70158"
+                          },
+                          {
+                            "k": "node_id",
+                            "v": "U_kgDOBelUxA"
+                          },
+                          {
+                            "k": "organizations_url",
+                            "v": "https://api.github.com/users/manish70158/orgs"
+                          },
+                          {
+                            "k": "received_events_url",
+                            "v": "https://api.github.com/users/manish70158/received_events"
+                          },
+                          {
+                            "k": "repos_url",
+                            "v": "https://api.github.com/users/manish70158/repos"
+                          },
+                          {
+                            "k": "site_admin",
+                            "v": false
+                          },
+                          {
+                            "k": "starred_url",
+                            "v": "https://api.github.com/users/manish70158/starred{/owner}{/repo}"
+                          },
+                          {
+                            "k": "subscriptions_url",
+                            "v": "https://api.github.com/users/manish70158/subscriptions"
+                          },
+                          {
+                            "k": "type",
+                            "v": "User"
+                          },
+                          {
+                            "k": "url",
+                            "v": "https://api.github.com/users/manish70158"
+                          },
+                          {
+                            "k": "user_view_type",
+                            "v": "public"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "k": "private",
+                      "v": false
+                    },
+                    {
+                      "k": "pulls_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/pulls{/number}"
+                    },
+                    {
+                      "k": "pushed_at",
+                      "v": "2025-06-08T15:36:33Z"
+                    },
+                    {
+                      "k": "releases_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/releases{/id}"
+                    },
+                    {
+                      "k": "size",
+                      "v": 6411.0
+                    },
+                    {
+                      "k": "ssh_url",
+                      "v": "git@github.com:manish70158/LinkedJobApply.git"
+                    },
+                    {
+                      "k": "stargazers_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "stargazers_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/stargazers"
+                    },
+                    {
+                      "k": "statuses_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/statuses/{sha}"
+                    },
+                    {
+                      "k": "subscribers_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/subscribers"
+                    },
+                    {
+                      "k": "subscription_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/subscription"
+                    },
+                    {
+                      "k": "svn_url",
+                      "v": "https://github.com/manish70158/LinkedJobApply"
+                    },
+                    {
+                      "k": "tags_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/tags"
+                    },
+                    {
+                      "k": "teams_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/teams"
+                    },
+                    {
+                      "k": "topics",
+                      "v": {
+                        "t": 1
+                      }
+                    },
+                    {
+                      "k": "trees_url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply/git/trees{/sha}"
+                    },
+                    {
+                      "k": "updated_at",
+                      "v": "2025-06-08T15:36:41Z"
+                    },
+                    {
+                      "k": "url",
+                      "v": "https://api.github.com/repos/manish70158/LinkedJobApply"
+                    },
+                    {
+                      "k": "visibility",
+                      "v": "public"
+                    },
+                    {
+                      "k": "watchers",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "watchers_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "web_commit_signoff_required",
+                      "v": false
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "sender",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "avatar_url",
+                      "v": "https://avatars.githubusercontent.com/u/99177668?v=4"
+                    },
+                    {
+                      "k": "events_url",
+                      "v": "https://api.github.com/users/manish70158/events{/privacy}"
+                    },
+                    {
+                      "k": "followers_url",
+                      "v": "https://api.github.com/users/manish70158/followers"
+                    },
+                    {
+                      "k": "following_url",
+                      "v": "https://api.github.com/users/manish70158/following{/other_user}"
+                    },
+                    {
+                      "k": "gists_url",
+                      "v": "https://api.github.com/users/manish70158/gists{/gist_id}"
+                    },
+                    {
+                      "k": "gravatar_id",
+                      "v": ""
+                    },
+                    {
+                      "k": "html_url",
+                      "v": "https://github.com/manish70158"
+                    },
+                    {
+                      "k": "id",
+                      "v": 99177668.0
+                    },
+                    {
+                      "k": "login",
+                      "v": "manish70158"
+                    },
+                    {
+                      "k": "node_id",
+                      "v": "U_kgDOBelUxA"
+                    },
+                    {
+                      "k": "organizations_url",
+                      "v": "https://api.github.com/users/manish70158/orgs"
+                    },
+                    {
+                      "k": "received_events_url",
+                      "v": "https://api.github.com/users/manish70158/received_events"
+                    },
+                    {
+                      "k": "repos_url",
+                      "v": "https://api.github.com/users/manish70158/repos"
+                    },
+                    {
+                      "k": "site_admin",
+                      "v": false
+                    },
+                    {
+                      "k": "starred_url",
+                      "v": "https://api.github.com/users/manish70158/starred{/owner}{/repo}"
+                    },
+                    {
+                      "k": "subscriptions_url",
+                      "v": "https://api.github.com/users/manish70158/subscriptions"
+                    },
+                    {
+                      "k": "type",
+                      "v": "User"
+                    },
+                    {
+                      "k": "url",
+                      "v": "https://api.github.com/users/manish70158"
+                    },
+                    {
+                      "k": "user_view_type",
+                      "v": "public"
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "workflow",
+                "v": ".github/workflows/auto_apply.yml"
+              }
+            ]
+          }
+        },
+        {
+          "k": "workflow_ref",
+          "v": "manish70158/LinkedJobApply/.github/workflows/auto_apply.yml@refs/heads/main"
+        },
+        {
+          "k": "workflow_sha",
+          "v": "c477c3b1486061e31783955d97ad43db6a3c18d1"
+        },
+        {
+          "k": "repository_id",
+          "v": "997866098"
+        },
+        {
+          "k": "triggering_actor",
+          "v": "manish70158"
+        }
+      ]
+    },
+    "inputs": {
+      "t": 2
+    },
+    "matrix": null,
+    "needs": {
+      "t": 2
+    },
+    "strategy": {
+      "t": 2,
+      "d": [
+        {
+          "k": "fail-fast",
+          "v": true
+        },
+        {
+          "k": "job-index",
+          "v": 0.0
+        },
+        {
+          "k": "job-total",
+          "v": 1.0
+        },
+        {
+          "k": "max-parallel",
+          "v": 1.0
+        }
+      ]
+    },
+    "vars": {
+      "t": 2
+    }
+  },
+  "billingOwnerId": "U_kgDOBelUxA"
+}
+[2025-06-08 15:52:29Z INFO JobRunner] Job ID 592170c4-9b56-5ee6-a621-dec3b82ddb34
+[2025-06-08 15:52:29Z INFO ConfigurationStore] currentAssemblyLocation: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin/Runner.Worker.dll
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] binPath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] RootFolder: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO HostContext] Well known config file 'Runner': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.runner'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] ConfigFilePath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.runner
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO HostContext] Well known config file 'MigratedRunner': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.runner_migrated'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] MigratedConfigFilePath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.runner_migrated
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO HostContext] Well known config file 'Credentials': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.credentials'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] CredFilePath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.credentials
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO HostContext] Well known config file 'MigratedCredentials': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.credentials_migrated'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] MigratedCredFilePath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.credentials_migrated
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:29Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:29Z INFO HostContext] Well known config file 'Service': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.service'
+[2025-06-08 15:52:29Z INFO ConfigurationStore] ServiceConfigFilePath: /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/.service
+[2025-06-08 15:52:29Z INFO ConfigurationStore] Read setting file: 397 chars
+[2025-06-08 15:52:29Z INFO JobRunner] Initializing launch client
+[2025-06-08 15:52:29Z INFO JobServerQueue] Initializing results client
+[2025-06-08 15:52:30Z INFO ResultServer] Creating websocket client ...wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock
+[2025-06-08 15:52:30Z INFO ResultServer] Attempting to start websocket client with delay 00:00:00.
+[2025-06-08 15:52:30Z INFO JobServerQueue] Start process web console line queue.
+[2025-06-08 15:52:30Z INFO JobServerQueue] Start process file upload queue.
+[2025-06-08 15:52:30Z INFO JobServerQueue] Start results file upload queue.
+[2025-06-08 15:52:30Z INFO JobServerQueue] Starting results-based upload queue...
+[2025-06-08 15:52:30Z INFO JobServerQueue] Start process timeline update queue.
+[2025-06-08 15:52:31Z INFO ExecutionContext] Initializing Job context
+[2025-06-08 15:52:31Z INFO ExecutionContext] Initialize GitHub context
+[2025-06-08 15:52:31Z INFO ExecutionContext] Initialize Env context
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Diag': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/_diag'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Diag': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/_diag'
+[2025-06-08 15:52:31Z INFO JobRunner] Starting the job execution context.
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:31Z INFO HostContext] Well known directory 'Work': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/run.sh'
+[2025-06-08 15:52:31Z INFO JobRunner] Validating directory permissions for: '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/run.sh'
+[2025-06-08 15:52:31Z INFO JobServerQueue] Job timeline record has been updated for the first time.
+[2025-06-08 15:52:32Z ERR  JobRunner] System.IO.IOException: The file '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/run.sh' already exists.
+   at System.IO.FileSystem.CreateDirectory(String fullPath, UnixFileMode unixCreateMode)
+   at System.IO.Directory.CreateDirectory(String path)
+   at GitHub.Runner.Worker.JobRunner.RunAsync(AgentJobRequestMessage message, CancellationToken jobRequestCancellationToken)
+[2025-06-08 15:52:32Z INFO JobRunner] Shutting down the job server queue.
+[2025-06-08 15:52:32Z INFO JobServerQueue] Fire signal to shutdown all queues.
+[2025-06-08 15:52:32Z INFO Worker] Listening for cancel message from the channel.
+[2025-06-08 15:52:32Z INFO Worker] Waiting for the job to complete or for a cancel message from the channel.
+[2025-06-08 15:52:33Z INFO JobServerQueue] All queue process task stopped.
+[2025-06-08 15:52:33Z INFO ResultServer] Successfully started websocket client.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Try to append 1 batches web console lines for record '592170c4-9b56-5ee6-a621-dec3b82ddb34', success rate: 1/1.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Web console line queue drained.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Uploading 1 files in one shot.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2025-06-08 15:52:33Z INFO JobServerQueue] File upload queue drained.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Starting results-based upload queue...
+[2025-06-08 15:52:33Z INFO JobServerQueue] Uploading 1 file(s) in one shot through results service.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Got a job log file to send to results service.
+[2025-06-08 15:52:33Z INFO JobServerQueue] Starting upload of job log file to results service ResultsLog, /Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/_diag/blocks/e8faad93-bd34-49bd-8b9e-d249eaa9747b_592170c4-9b56-5ee6-a621-dec3b82ddb34.1
+[2025-06-08 15:52:39Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2025-06-08 15:52:39Z INFO JobServerQueue] Results upload queue drained.
+[2025-06-08 15:52:39Z INFO JobServerQueue] Timeline update queue drained.
+[2025-06-08 15:52:39Z INFO JobServerQueue] Disposing job server ...
+[2025-06-08 15:52:39Z INFO JobServerQueue] Disposing results server ...
+[2025-06-08 15:52:39Z INFO JobServerQueue] All queue process tasks have been stopped, and all queues are drained.
+[2025-06-08 15:52:39Z INFO HostContext] Well known directory 'Bin': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/bin'
+[2025-06-08 15:52:39Z INFO HostContext] Well known directory 'Root': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner'
+[2025-06-08 15:52:39Z INFO HostContext] Well known directory 'Diag': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/_diag'
+[2025-06-08 15:52:39Z INFO HostContext] Well known config file 'Telemetry': '/Users/mkuma929/learning/Auto_job_applier_linkedIn/actions-runner/_diag/.telemetry'
+[2025-06-08 15:52:39Z INFO JobRunner] Raising job completed against run service
+[2025-06-08 15:52:42Z INFO Worker] Job completed.
