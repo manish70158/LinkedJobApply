@@ -53,6 +53,7 @@ import os
 # Try to get API key from environment variable first, fall back to hardcoded value
 gemini_api_key = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
 gemini_model = "gemini-1.5-pro"              # Examples: "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"
+showAiErrorAlerts = False                    # Show error alerts when AI operations fail (not recommended in headless mode)
 '''
 Note: Gemini API model selection
 * "gemini-1.5-pro" - Most capable Gemini model, best for complex tasks (Recommended)
