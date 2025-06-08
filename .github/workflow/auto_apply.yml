@@ -41,5 +41,5 @@ jobs:
               env:
                   LN_USERNAME: ${{ secrets.LN_USERNAME }}
                   LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  OPENAI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
