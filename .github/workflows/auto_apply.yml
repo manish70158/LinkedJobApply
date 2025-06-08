@@ -1,0 +1,78 @@
+name: LinkedIn Auto Job Applier
+
+on:
+  schedule:
+    # Runs at 5:00 AM UTC every day
+    - cron: '0 5 * * *'
+  # Allows manual triggering from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  job_application:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install undetected-chromedriver pyautogui setuptools google-generativeai openai flask-cors flask
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+
+      - name: Install xvfb for GUI applications
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Prepare config files
+        run: |
+          # Make any runtime modifications to configuration files if needed
+          sed -i "s/gemini_api_key = \"YOUR_GEMINI_API_KEY\"/gemini_api_key = os.environ.get(\"GEMINI_API_KEY\", \"\")/g" config/secrets.py
+          sed -i "s/run_in_background = False/run_in_background = True/g" config/settings.py
+          sed -i "s/pause_at_failed_question = True/pause_at_failed_question = False/g" config/settings.py
+          sed -i "s/pause_before_submit = True/pause_before_submit = False/g" config/settings.py
+
+      - name: Run LinkedIn Auto Job Applier
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+          DISPLAY: ':99'
+        run: |
+          # Start virtual display
+          Xvfb :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
+          
+          # Replace hardcoded credentials with environment variables if they exist
+          if [ ! -z "$LN_USERNAME" ]; then
+            sed -i "s/username = \".*\"/username = \"$LN_USERNAME\"/g" config/secrets.py
+          fi
+          
+          if [ ! -z "$LN_PASSWORD" ]; then
+            sed -i "s/password = \".*\"/password = \"$LN_PASSWORD\"/g" config/secrets.py
+          fi
+          
+          # Run the application
+          python runAiBot.py
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: application-logs
+          path: |
+            logs/
+            all excels/
+
+      

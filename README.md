@@ -53,7 +53,27 @@ Click on above image to watch the demo or use this link https://youtu.be/gMbB1fW
 6. (Optional) Don't forget to add you default resume in the location you mentioned in `default_resume_path = "all resumes/default/resume.pdf"` given in `/config/questions.py`. If one is not provided, it will use your previous resume submitted in LinkedIn or (In Development) generate custom resume if OpenAI APT key is provided!
 7. Run `runAiBot.py` and see the magic happen.
 8. To run the Applied Jobs history UI, run `app.py` and open web browser on `http://localhost:5000`.
-8. If you have questions or need help setting it up or to talk in general, join the github server: https://discord.gg/fFp7uUzWCY
+9. If you have questions or need help setting it up or to talk in general, join the github server: https://discord.gg/fFp7uUzWCY
+
+### How to Fork the Repository
+
+If you're having issues with permissions or want your own copy of the repository:
+
+1. Go to the [Auto Job Applier LinkedIn repository](https://github.com/GodsScion/Auto_job_applier_linkedIn) on GitHub
+2. Click the "Fork" button in the top-right corner of the page
+3. Select your GitHub account as the destination for the fork
+4. Wait for GitHub to create a copy of the repository under your account
+5. Clone your forked repository to your local machine using:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/Auto_job_applier_linkedIn.git
+   ```
+6. Navigate to the project directory:
+   ```bash
+   cd Auto_job_applier_linkedIn
+   ```
+7. Now you can make changes, commit them, and push to your own repository without permission issues
+
+This approach allows you to maintain your own version of the code while still being able to pull updates from the original repository if needed.
 
 [back to index](#-content)
 

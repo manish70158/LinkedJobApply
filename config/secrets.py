@@ -17,8 +17,8 @@ version:    24.12.3.10.30
 
 
 # Login Credentials for LinkedIn (Optional)
-username = "a.manish1689@gmail.com"       # Enter your username in the quotes
-password = "Haryanao@123"           # Enter your password in the quotes
+username = ""       # Enter your username in the quotes
+password = ""           # Enter your password in the quotes
 
 
 ## Artificial Intelligence (Beta Not-Recommended)
@@ -32,35 +32,35 @@ Note: Set it as True only if you want to use AI, and If you either have a
     c. LM Studio - https://lmstudio.ai/ (Recommended)
     d. Jan - https://jan.ai/
 2. OR you have a valid OpenAI API Key, and money to spare, and you don't mind spending it.
+3. OR you have a valid Gemini API key from Google AI Studio.
 CHECK THE OPENAI API PIRCES AT THEIR WEBSITE (https://openai.com/api/pricing/). 
 '''
 
 ##> ------ Yang Li : MARKYangL - Feature ------
 # Select AI Provider
-ai_provider = "ollama"               # "openai", "deepseek"
+ai_provider = "gemini"               # "openai", "deepseek", "ollama", "gemini"
 '''
 Note: Select your AI provider.
 * "openai" - OpenAI API (GPT models)
 * "deepseek" - DeepSeek API (DeepSeek models)
+* "ollama" - Local Ollama instance
+* "gemini" - Google Gemini API
 '''
 
-# DeepSeek Configuration
-deepseek_api_url = "https://api.deepseek.com"       # Examples: "https://api.deepseek.com", "https://api.deepseek.com/v1"
+##> ------ Manish Kumar : a.manish1689@gmail.com - Feature ------
+# Gemini Configuration
+import os
+# Try to get API key from environment variable first, fall back to hardcoded value
+gemini_api_key = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
+gemini_model = "gemini-1.5-pro"              # Examples: "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"
 '''
-Note: DeepSeek API URL. 
-This URL is compatible with OpenAI interface. The full endpoint will be {deepseek_api_url}/chat/completions.
-'''
+Note: Gemini API model selection
+* "gemini-1.5-pro" - Most capable Gemini model, best for complex tasks (Recommended)
+* "gemini-1.5-flash" - Fastest Gemini model, best for simpler tasks
+* "gemini-1.0-pro" - Legacy Gemini model
 
-deepseek_api_key = "YOUR_OPENAI_API_KEY"                # Enter your DeepSeek API key in the quotes
-'''
-Note: Enter your DeepSeek API key here. Leave it empty as "" or "not-needed" if not needed.
-'''
-
-deepseek_model = "deepseek-chat"     # Examples: "deepseek-chat", "deepseek-reasoner"
-'''
-Note: DeepSeek model selection
-* "deepseek-chat" - DeepSeek-V3, general conversation model
-* "deepseek-reasoner" - DeepSeek-R1, reasoning model
+For security, the API key is read from environment variables when available.
+When running on GitHub Actions, set the GEMINI_API_KEY secret in your repository settings.
 '''
 ##<
 
