@@ -168,7 +168,7 @@ def validate_secrets() -> None | ValueError | TypeError:
     
     ##> ------ Yang Li : MARKYangL - Feature ------
     # Validate DeepSeek configuration
-    check_string(ai_provider, "ai_provider", ["openai", "deepseek","ollama"])
+    check_string(ai_provider, "ai_provider", ["openai", "deepseek","ollama", "gemini"])
     check_string(deepseek_api_url, "deepseek_api_url", min_length=5)
     check_string(deepseek_api_key, "deepseek_api_key")
     check_string(deepseek_model, "deepseek_model", ["deepseek-chat", "deepseek-reasoner"])

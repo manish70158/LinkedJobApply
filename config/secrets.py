@@ -17,8 +17,8 @@ version:    24.12.3.10.30
 
 
 # Login Credentials for LinkedIn (Optional)
-username = "a.manish1689@gmail.com"       # Enter your username in the quotes
-password = "Haryanao@123"           # Enter your password in the quotes
+username = ""       # Enter your username in the quotes
+password = ""           # Enter your password in the quotes
 
 
 ## Artificial Intelligence (Beta Not-Recommended)
@@ -52,7 +52,7 @@ Note: Select your AI provider.
 import os
 # Try to get API key from environment variable first, fall back to hardcoded value
 # gemini_api_key = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
-gemini_api_key ="AIzaSyBscr8qdwTKxJpI1UgVX2FEhLFypBu8vOw"
+gemini_api_key =""
 gemini_model = "gemini-1.5-pro"              # Examples: "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"
 showAiErrorAlerts = False                    # Show error alerts when AI operations fail (set to False for headless environments)
 '''
