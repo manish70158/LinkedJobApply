@@ -2,8 +2,8 @@ name: LinkedIn Auto Job Applier
 
 on:
   schedule:
-    # Runs at 5:00 AM UTC every day
-    - cron: '0 5 * * *'
+    # Run every hour
+    - cron: '0 * * * *'
   # Allows manual triggering from GitHub Actions tab
   workflow_dispatch:
 
@@ -75,4 +75,3 @@ jobs:
             logs/
             all excels/
 
-      
