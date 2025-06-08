@@ -5,7 +5,7 @@
   "poolName": "Default",
   "serverUrl": "https://pipelinesghubeus9.actions.githubusercontent.com/f41TOVmSr8eXu24X2I0ezZmzGJ4bIeVCg1jhqJ0QUIr1FTdXvZ/",
   "gitHubUrl": "https://github.com/manish70158/LinkedJobApply",
-  "workFolder": "./run.sh",
+  "workFolder": "_work",
   "useV2Flow": true,
   "serverUrlV2": "https://broker.actions.githubusercontent.com/"
 }
