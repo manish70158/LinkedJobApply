@@ -1,0 +1,12 @@
+# Minimal requirements for LinkedIn job applier
+google-generativeai>=0.7.0
+langchain==0.1.1
+langchain-core==0.1.21
+langchain-community==0.0.20
+langchain-ollama==0.3.3
+selenium>=4.15.0
+undetected-chromedriver>=3.5.0
+PyAutoGUI>=0.9.54
+requests>=2.30.0
+flask>=3.0.0
+flask-cors>=4.0.0
