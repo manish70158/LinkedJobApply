@@ -24,10 +24,10 @@ jobs:
           # Check if Python is already installed
           python3 --version || echo "Python needs to be installed manually"
 
-      - name: Install dependencies
+      - name: Install dependencies from requirements.txt
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install undetected-chromedriver pyautogui setuptools google-generativeai openai flask-cors flask
+          python3 -m pip install -r requirements.txt
 
       # No need for special Chrome setup on your machine if Chrome is already installed
       # No need for xvfb on macOS as it has native GUI
