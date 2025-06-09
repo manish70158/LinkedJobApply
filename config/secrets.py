@@ -52,7 +52,7 @@ Note: Select your AI provider.
 import os
 # Try to get API key from environment variable first, fall back to hardcoded value
 gemini_api_key = os.environ.get("GEMINI_API_KEY", "")  # Get API key from environment variable
-gemini_model = "gemini-2.0-flash"              # Using faster model which may be more reliable
+gemini_model = "gemini-1.5-flash"              # Using faster model which may be more reliable
 showAiErrorAlerts = False                       # Show error alerts to help with debugging
 '''
 Note: Gemini API model selection
