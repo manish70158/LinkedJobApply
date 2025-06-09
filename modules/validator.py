@@ -169,9 +169,9 @@ def validate_secrets() -> None | ValueError | TypeError:
     ##> ------ Yang Li : MARKYangL - Feature ------
     # Validate DeepSeek configuration
     check_string(ai_provider, "ai_provider", ["openai", "deepseek","ollama", "gemini"])
-    check_string(deepseek_api_url, "deepseek_api_url", min_length=5)
-    check_string(deepseek_api_key, "deepseek_api_key")
-    check_string(deepseek_model, "deepseek_model", ["deepseek-chat", "deepseek-reasoner"])
+    # check_string(deepseek_api_url, "deepseek_api_url", min_length=5)
+    # check_string(deepseek_api_key, "deepseek_api_key")
+    # check_string(deepseek_model, "deepseek_model", ["deepseek-chat", "deepseek-reasoner"])
     ##<
 
 
@@ -215,26 +215,6 @@ def validate_config() -> bool | ValueError | TypeError:
     '''
     Runs all validation functions to validate all variables in the config files.
     '''
-    # Check if we should skip validation (for headless environments like GitHub Actions)
-    try:
-        import os
-        running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
-        
-        # Try to import skip_validation from settings if it exists
-        try:
-            from config.settings import skip_validation
-            if skip_validation or running_in_actions:
-                print("Running in headless mode or skip_validation enabled - skipping configuration validation")
-                return True
-        except ImportError:
-            # If skip_validation doesn't exist but we're in GitHub Actions, skip validation
-            if running_in_actions:
-                print("Running in GitHub Actions - skipping configuration validation")
-                return True
-    except Exception as e:
-        print(f"Error checking skip_validation status: {e}")
-    
-    # Regular validation path
     validate_personals()
     validate_questions()
     validate_search()

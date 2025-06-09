@@ -106,7 +106,7 @@ def gemini_extract_skills(client: genai.GenerativeModel, job_description: str) -
         Job Description:
         {job_description}
         """
-        
+        print_lg("Trying to extract skills from job description using Gemini API...")
         response = client.generate_content(prompt)
         
         # Extract and parse JSON from response
