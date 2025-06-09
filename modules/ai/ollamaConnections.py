@@ -74,28 +74,21 @@ def ollama_extract_skills(client: ChatOllama, job_description: str, stream: bool
     try:
         print_lg("Extracting skills from job description using LangChain...")
         
-        # Create the extraction prompt
+        # Create the extraction prompt with explicit JSON format instructions
         prompt = f"""
         Extract key skills and requirements from the following job description.
-        Return a JSON object with keys for:
+        Return ONLY a valid JSON object with NO additional text or explanation, with keys for:
         - "technical_skills": list of technical skills required
         - "soft_skills": list of soft skills mentioned
-        - "experience": years of experience required
+        - "experience": years of experience required (as a number only)
         - "education": education requirements
         - "certifications": any certifications mentioned
         
         Job Description:
         {job_description}
+        
+        Format your response as valid JSON only! No additional text, explanations, or apologies.
         """
-        
-        # Set up output parser for structured JSON
-        json_parser = JsonOutputParser()
-        
-        # Create a fixing parser to handle JSON errors
-        fixing_parser = OutputFixingParser.from_llm(
-            parser=json_parser,
-            llm=client
-        )
         
         # Invoke with the prompt
         response = client.invoke(prompt)
@@ -104,20 +97,132 @@ def ollama_extract_skills(client: ChatOllama, job_description: str, stream: bool
         
         # Parse the response to JSON
         try:
-            # First try to parse directly
-            result = json_parser.parse(response.content)
-        except Exception:
-            # If direct parsing fails, use the fixing parser
-            result = fixing_parser.parse(response.content)
-        
-        print_lg("\nExtracted Skills (JSON):")
-        print_lg(json.dumps(result, indent=2))
-        
-        return result
+            # Extract just the JSON part from the response
+            json_content = extract_json_from_text(response.content)
+            # Parse the extracted JSON
+            if json_content:
+                result = json.loads(json_content)
+                print_lg("\nExtracted Skills (JSON):")
+                print_lg(json.dumps(result, indent=2))
+                return result
+            else:
+                raise ValueError("No valid JSON found in response")
+        except Exception as json_err:
+            print_lg(f"Failed to parse JSON directly: {str(json_err)}")
+            
+            # Try a more lenient approach - create a basic structure if parsing fails
+            skills_json = {
+                "technical_skills": extract_skills_from_text(response.content, "technical"),
+                "soft_skills": extract_skills_from_text(response.content, "soft"),
+                "experience": extract_experience_from_text(response.content),
+                "education": extract_education_from_text(response.content),
+                "certifications": extract_certs_from_text(response.content)
+            }
+            return skills_json
+            
     except Exception as e:
         critical_error_log("Error extracting skills with LangChain Ollama!", e)
         print_lg(f"Error details: {str(e)}")
         return {"error": str(e)}
+
+def extract_json_from_text(text: str) -> str:
+    """
+    Extract JSON string from text that may contain non-JSON content
+    """
+    # Look for JSON content between curly braces
+    import re
+    json_match = re.search(r'\{[\s\S]*\}', text)
+    if json_match:
+        return json_match.group(0)
+    return None
+
+def extract_skills_from_text(text: str, skill_type: str) -> List[str]:
+    """
+    Extract skills from text when JSON parsing fails
+    """
+    skills = []
+    lines = text.lower().split('\n')
+    in_section = False
+    
+    section_markers = {
+        "technical": ["technical skills", "tech skills", "hard skills"],
+        "soft": ["soft skills", "interpersonal skills"]
+    }
+    
+    markers = section_markers.get(skill_type, [])
+    
+    for line in lines:
+        # Check if we're entering a relevant section
+        if any(marker in line.lower() for marker in markers):
+            in_section = True
+            continue
+        
+        # Check if we're exiting the section
+        if in_section and any(marker in line.lower() for marker in ["experience", "education", "certification"]):
+            in_section = False
+        
+        # Extract skills from lines within the section
+        if in_section and (":" in line or "-" in line or "•" in line or "*" in line):
+            # Extract the skill after the delimiter
+            skill = line.split(":", 1)[-1].split("-", 1)[-1].split("•", 1)[-1].split("*", 1)[-1].strip()
+            if skill and len(skill) > 1 and not skill.startswith(('http', 'www')):
+                skills.append(skill)
+    
+    # If no skills found using section detection, try to extract anything that looks like a skill
+    if not skills and skill_type == "technical":
+        potential_tech_skills = re.findall(r'\b(Java|Python|React|Docker|AWS|Azure|SQL|JavaScript|Node\.js|C#|\.NET|Angular|MongoDB|Kubernetes|Spring|Git|REST|API|HTML|CSS)\b', text)
+        skills = list(set(potential_tech_skills))
+    
+    return skills
+
+def extract_experience_from_text(text: str) -> int:
+    """
+    Extract years of experience from text
+    """
+    import re
+    # Look for patterns like "5+ years", "3-5 years", "at least 5 years"
+    exp_patterns = [
+        r'(\d+)\+?\s*(?:to\s*\d+)?\s*years?',
+        r'(\d+)\s*-\s*\d+\s*years?',
+        r'at least\s*(\d+)\s*years?',
+        r'minimum\s*(?:of\s*)?(\d+)\s*years?'
+    ]
+    
+    for pattern in exp_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+    
+    return 0  # Default if no experience requirement found
+
+def extract_education_from_text(text: str) -> List[str]:
+    """
+    Extract education requirements from text
+    """
+    education = []
+    if "bachelor" in text.lower() or "b.s." in text.lower() or "b.a." in text.lower():
+        education.append("Bachelor's degree")
+    if "master" in text.lower() or "m.s." in text.lower() or "m.a." in text.lower():
+        education.append("Master's degree")
+    if "phd" in text.lower() or "doctorate" in text.lower():
+        education.append("PhD")
+    return education
+
+def extract_certs_from_text(text: str) -> List[str]:
+    """
+    Extract certifications from text
+    """
+    cert_keywords = ["certification", "certified", "certificate"]
+    certs = []
+    lines = text.split('\n')
+    
+    for line in lines:
+        if any(keyword in line.lower() for keyword in cert_keywords):
+            cert = line.strip()
+            if cert:
+                certs.append(cert)
+    
+    return certs
 
 def ollama_completion(
     client: ChatOllama, 
