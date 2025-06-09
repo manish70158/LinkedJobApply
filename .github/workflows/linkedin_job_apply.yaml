@@ -46,14 +46,37 @@ jobs:
 
       - name: Prepare config files
         run: |
-          # Update configuration files as needed
-          sed -i '' "s/gemini_api_key = \"YOUR_GEMINI_API_KEY\"/gemini_api_key = os.environ.get(\"GEMINI_API_KEY\", \"\")/g" config/secrets.py
+          # Update configuration files using a more robust Python script
+          python3 -c "
+          import os
+          import re
+
+          # Read the secrets.py file
+          with open('config/secrets.py', 'r') as f:
+              content = f.read()
+
+          # Find and replace any gemini_api_key line with our environment variable version
+          # This is more robust than using sed with exact string matching
+          pattern = re.compile(r'gemini_api_key\s*=.*')
+          content = pattern.sub('gemini_api_key = os.environ.get(\"GEMINI_API_KEY\", \"\")', content)
           
-          # Insert LinkedIn credentials directly into secrets.py
-          echo "# Auto-inserted by GitHub Actions" >> config/secrets.py
-          echo "import os" >> config/secrets.py
-          echo "username = os.environ.get('LN_USERNAME', '')" >> config/secrets.py
-          echo "password = os.environ.get('LN_PASSWORD', '')" >> config/secrets.py
+          # Write the modified content back
+          with open('config/secrets.py', 'w') as f:
+              f.write(content)
+          
+          # Make sure username and password are set to read from environment variables
+          with open('config/secrets.py', 'r') as f:
+              content = f.read()
+              
+          # Check if we need to modify username and password
+          if 'username = os.environ.get(\"LN_USERNAME\"' not in content:
+              with open('config/secrets.py', 'a') as f:
+                  f.write('\n# Auto-inserted by GitHub Actions\n')
+                  f.write('username = os.environ.get(\"LN_USERNAME\", \"\")\n')
+                  f.write('password = os.environ.get(\"LN_PASSWORD\", \"\")\n')
+          
+          print('Configuration files updated successfully')
+          "
           
           # Print a confirmation that we're running in headless mode
           echo "Running in GitHub Actions headless mode"
