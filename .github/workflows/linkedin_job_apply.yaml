@@ -32,29 +32,40 @@ jobs:
       # No need for special Chrome setup on your machine if Chrome is already installed
       # No need for xvfb on macOS as it has native GUI
 
+      - name: Create settings override
+        run: |
+          # Create settings override to bypass validation
+          echo "# Auto-generated settings for headless mode" >> config/settings.py
+          echo "import os" >> config/settings.py
+          echo "running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'" >> config/settings.py
+          echo "if running_in_actions:" >> config/settings.py
+          echo "    run_in_background = True" >> config/settings.py
+          echo "    skip_validation = True" >> config/settings.py
+          echo "    pause_at_failed_question = False" >> config/settings.py
+          echo "    pause_before_submit = False" >> config/settings.py
+
       - name: Prepare config files
         run: |
           # Update configuration files as needed
           sed -i '' "s/gemini_api_key = \"YOUR_GEMINI_API_KEY\"/gemini_api_key = os.environ.get(\"GEMINI_API_KEY\", \"\")/g" config/secrets.py
-          # Only disable pause options if running in fully automated mode
-          # sed -i '' "s/pause_at_failed_question = True/pause_at_failed_question = False/g" config/settings.py
-          # sed -i '' "s/pause_before_submit = True/pause_before_submit = False/g" config/settings.py
+          
+          # Insert LinkedIn credentials directly into secrets.py
+          echo "# Auto-inserted by GitHub Actions" >> config/secrets.py
+          echo "import os" >> config/secrets.py
+          echo "username = os.environ.get('LN_USERNAME', '')" >> config/secrets.py
+          echo "password = os.environ.get('LN_PASSWORD', '')" >> config/secrets.py
+          
+          # Print a confirmation that we're running in headless mode
+          echo "Running in GitHub Actions headless mode"
 
       - name: Run LinkedIn Auto Job Applier
         env:
+          GITHUB_ACTIONS: "true"
+          CI: "true" 
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LN_USERNAME: ${{ secrets.LN_USERNAME }}
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
         run: |
-          # Replace hardcoded credentials with environment variables if they exist
-          if [ ! -z "$LN_USERNAME" ]; then
-            sed -i '' "s/username = \".*\"/username = \"$LN_USERNAME\"/g" config/secrets.py
-          fi
-          
-          if [ ! -z "$LN_PASSWORD" ]; then
-            sed -i '' "s/password = \".*\"/password = \"$LN_PASSWORD\"/g" config/secrets.py
-          fi
-          
           # Run the application
           python3 runAiBot.py
 
