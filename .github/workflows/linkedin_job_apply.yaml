@@ -9,8 +9,8 @@ on:
 
 jobs:
   job_application:
-    # Change from ubuntu-latest to self-hosted runner
-    runs-on: ubuntu-latest 
+    # Use ubuntu-latest for standardized dependency installation
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
@@ -18,19 +18,27 @@ jobs:
         with:
           fetch-depth: 1
 
-      # We can skip Python setup if already installed on your self-hosted runner
       - name: Set up Python
-        run: |
-          # Check if Python is already installed
-          python3 --version || echo "Python needs to be installed manually"
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
       - name: Install dependencies from requirements.txt
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Install additional dependencies for running Chrome headless
+          sudo apt-get update
+          sudo apt-get install -y xvfb google-chrome-stable
+          echo "Installed Python packages:"
+          pip list
 
-      # No need for special Chrome setup on your machine if Chrome is already installed
-      # No need for xvfb on macOS as it has native GUI
+      - name: Setup Chrome and Xvfb
+        run: |
+          # Start Xvfb
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          echo "export DISPLAY=:99" >> $GITHUB_ENV
 
       - name: Create settings override
         run: |
@@ -47,7 +55,7 @@ jobs:
       - name: Prepare config files
         run: |
           # Update configuration files using a more robust Python script
-          python3 -c "
+          python -c "
           import os
           import re
 
@@ -85,10 +93,11 @@ jobs:
         env:
           GITHUB_ACTIONS: "true"
           CI: "true" 
+          DISPLAY: ":99"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LN_USERNAME: ${{ secrets.LN_USERNAME }}
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
         run: |
-          # Run the application
-          python3 runAiBot.py
+          # Run the application with proper headless configuration
+          python runAiBot.py
 
