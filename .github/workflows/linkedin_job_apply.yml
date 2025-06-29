@@ -1,4 +1,4 @@
-name: LinkedIn Auto Job Applier
+name: LinkedIn Auto Job Applier New
 
 on:
   schedule:
@@ -21,15 +21,16 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Install Chrome and dependencies
+      - name: Install system dependencies
         run: |
-          # Install required packages
           sudo apt-get update
-          sudo apt-get install -y wget unzip xvfb python3-pip python3-venv curl x11-utils scrot
+          sudo apt-get install -y wget unzip xvfb python3-pip python3-venv curl x11-utils scrot python3-tk python3-dev
 
+      - name: Set up Chrome
+        run: |
           # Remove any existing Chrome installations
           sudo apt-get remove -y google-chrome-stable
-          sudo rm -rf /etc/apt/sources.list.d/google-chrome*.list
+          sudo rm -rf /etc/apt/sources.list.d/google-chrome*.list /usr/local/bin/chromedriver ~/.local/bin/chromedriver
 
           # Install Chrome
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
@@ -38,32 +39,67 @@ jobs:
           sudo apt-get install -y google-chrome-stable
 
           # Get Chrome version
-          CHROME_VERSION=$(google-chrome --version | grep -oP '(\d+\.\d+\.\d+\.\d+)')
+          CHROME_VERSION=$(google-chrome --version | grep -oP '(?<=Google Chrome )\d+\.\d+\.\d+\.\d+')
           CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | cut -d. -f1)
           echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
+          echo "CHROME_VERSION=$CHROME_VERSION" >> $GITHUB_ENV
+          echo "CHROME_MAJOR_VERSION=$CHROME_MAJOR_VERSION" >> $GITHUB_ENV
 
-          # Get matching ChromeDriver version
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION")
-
+      - name: Set up ChromeDriver
+        run: |
+          # Try to get matching ChromeDriver version
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+          
+          if [ -z "$CHROMEDRIVER_VERSION" ]; then
+            echo "No exact match found, trying Chrome for Testing..."
+            CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+          fi
+          
+          if [ -z "$CHROMEDRIVER_VERSION" ]; then
+            echo "No Chrome for Testing version found, trying previous version..."
+            PREV_VERSION=$((${{ env.CHROME_MAJOR_VERSION }}-1))
+            CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$PREV_VERSION")
+          fi
+          
+          if [ -z "$CHROMEDRIVER_VERSION" ]; then
+            echo "Failed to find compatible ChromeDriver version"
+            exit 1
+          fi
+          
+          echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
+          echo "CHROMEDRIVER_VERSION=$CHROMEDRIVER_VERSION" >> $GITHUB_ENV
+          
+          # Create directories for ChromeDriver
+          sudo mkdir -p /usr/local/bin ~/.local/bin
+          
           # Download and install ChromeDriver
+          TEMP_DIR=$(mktemp -d)
+          cd "$TEMP_DIR"
           wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
           unzip -o chromedriver_linux64.zip
-          sudo mv -f chromedriver /usr/local/bin/
+          
+          # Install in both system and user locations
+          sudo cp -f chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
-
-          # Set up directories and permissions
-          sudo mkdir -p ~/Downloads
-          sudo chmod 777 ~/Downloads
-          mkdir -p logs/screenshots
-          chmod -R 777 logs
-          mkdir -p "all excels"
-          chmod -R 777 "all excels"
-
-          # Print versions for verification
-          echo "Chrome version:"
-          google-chrome --version
+          cp -f chromedriver ~/.local/bin/
+          chmod +x ~/.local/bin/chromedriver
+          
+          # Clean up
+          cd -
+          rm -rf "$TEMP_DIR"
+          
+          # Verify installation
           echo "ChromeDriver version:"
           chromedriver --version
+
+      - name: Set up project directories
+        run: |
+          # Create and set permissions for required directories
+          mkdir -p ~/Downloads logs/screenshots "all excels" "all resumes/temp"
+          chmod -R 777 ~/Downloads logs "all excels" "all resumes"
+          
+          # Verify directory setup
+          ls -la ~/Downloads logs "all excels" "all resumes"
 
       - name: Install Python packages
         run: |
@@ -75,6 +111,7 @@ jobs:
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
           sleep 3
+          echo "DISPLAY=:99.0" >> $GITHUB_ENV
 
       - name: Configure for headless mode
         run: |
@@ -111,6 +148,25 @@ jobs:
                   f.write('password = os.environ.get(\"LN_PASSWORD\", \"\")\n')
           "
 
+      - name: Verify environment
+        run: |
+          echo "System information:"
+          uname -a
+          echo "Directory structure:"
+          ls -R
+          echo "Chrome version:"
+          google-chrome --version
+          echo "ChromeDriver version:"
+          chromedriver --version
+          echo "Python version:"
+          python --version
+          echo "Display:"
+          echo $DISPLAY
+          echo "ChromeDriver location:"
+          which chromedriver
+          echo "Chrome binary location:"
+          which google-chrome
+
       - name: Run LinkedIn Auto Job Applier
         env:
           DISPLAY: ":99.0"
@@ -121,12 +177,14 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LN_USERNAME: ${{ secrets.LN_USERNAME }}
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+          CHROME_VERSION: ${{ env.CHROME_VERSION }}
+          CHROMEDRIVER_VERSION: ${{ env.CHROMEDRIVER_VERSION }}
         run: |
-          # Print debugging info
+          # Print environment info
           echo "Python path: $PYTHONPATH"
           echo "Downloads path: $DOWNLOADS_PATH"
-          echo "Chrome version:"
-          google-chrome --version
-          echo "ChromeDriver version:"
-          chromedriver --version
+          echo "Chrome version: $CHROME_VERSION"
+          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          
+          # Run the bot
           python runAiBot.py
