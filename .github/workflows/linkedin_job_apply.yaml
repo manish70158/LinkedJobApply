@@ -27,24 +27,42 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wget unzip xvfb
 
-          # Install Chrome and remove apt key warning
+          # Install Chrome using the new apt key method
           sudo mkdir -p /etc/apt/keyrings
           wget -q -O- https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg
           echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
           
-          # Print Chrome version and set up chromedriver
+          # Print Chrome version and get major version
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
           CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | awk -F'.' '{print $1}')
           echo "Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
           
-          # Get matching chromedriver version with fallback
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION")
+          # Try to get matching chromedriver version, fall back through versions if needed
+          CHROMEDRIVER_VERSION=""
+          for VERSION in $CHROME_MAJOR_VERSION $(seq $((CHROME_MAJOR_VERSION-1)) $((CHROME_MAJOR_VERSION-5)) -1); do
+            echo "Trying chromedriver version $VERSION..."
+            RELEASE_URL="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION"
+            RESPONSE=$(curl -s "$RELEASE_URL")
+            if [[ ! $RESPONSE =~ "Error" ]]; then
+              CHROMEDRIVER_VERSION=$RESPONSE
+              echo "Found compatible chromedriver version: $CHROMEDRIVER_VERSION"
+              break
+            fi
+          done
+
+          # If still no version found, try the latest release
           if [ -z "$CHROMEDRIVER_VERSION" ]; then
             echo "Falling back to latest chromedriver version"
             CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
           fi
+          
+          if [ -z "$CHROMEDRIVER_VERSION" ]; then
+            echo "Failed to find a compatible chromedriver version"
+            exit 1
+          fi
+          
           echo "Installing chromedriver version: $CHROMEDRIVER_VERSION"
           
           # Download and install chromedriver
