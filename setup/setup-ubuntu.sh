@@ -37,22 +37,26 @@ fi
 
 echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
 
-# Clean up any existing ChromeDriver files
-rm -rf chromedriver-linux64 chromedriver-linux64.zip /usr/local/bin/chromedriver
+# Clean up any existing ChromeDriver files and ensure directories are empty
+sudo rm -rf /usr/local/bin/chromedriver chromedriver-linux64* /tmp/chromedriver*
 
-# Download and install ChromeDriver
+# Create a clean temporary directory
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR" || exit 1
+
+# Download ChromeDriver to temp directory
 wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
 
-# Create a temporary directory for extraction
-TEMP_DIR=$(mktemp -d)
-unzip -q chromedriver-linux64.zip -d "$TEMP_DIR"
+# Extract without prompting
+yes | unzip -o chromedriver-linux64.zip
 
-# Move ChromeDriver to final location
-mv "$TEMP_DIR/chromedriver-linux64/chromedriver" /usr/local/bin/
-chmod +x /usr/local/bin/chromedriver
+# Install ChromeDriver
+sudo cp -f chromedriver-linux64/chromedriver /usr/local/bin/
+sudo chmod +x /usr/local/bin/chromedriver
 
-# Clean up
-rm -rf "$TEMP_DIR" chromedriver-linux64.zip
+# Clean up temp directory
+cd - || exit 1
+rm -rf "$TEMP_DIR"
 
 # Create required directories with proper permissions
 mkdir -p ~/Downloads
