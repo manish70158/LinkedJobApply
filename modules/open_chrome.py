@@ -236,22 +236,26 @@ If issue persists, try Safe Mode. Set, safe_mode = True in config.py"""
         exit()
 
 def open_chrome():
-    options = webdriver.ChromeOptions()
-    if run_in_background:
-        options.add_argument('--headless')
-    if disable_extensions:
-        options.add_argument('--disable-extensions')
-    if safe_mode:
-        options.add_argument('--guest')
-    
-    # Set up Chrome service using webdriver-manager
-    service = Service(ChromeDriverManager().install())
-    
     try:
+        options = webdriver.ChromeOptions()
+        if run_in_background or running_in_actions:
+            options.add_argument("--headless=new")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--window-size=1920,1080")
+        if disable_extensions:
+            options.add_argument('--disable-extensions')
+        if safe_mode:
+            options.add_argument('--guest')
+
+        # Set up ChromeDriver using webdriver_manager with cache_valid_range
+        service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
-        print("Chrome started successfully")
+        driver.maximize_window()
+        print_lg("Chrome started successfully")
         return driver
     except Exception as e:
-        print(f"Error starting Chrome: {str(e)}")
+        print_lg(f"Error starting Chrome: {str(e)}")
         return None
 
