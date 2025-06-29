@@ -53,19 +53,12 @@ def get_chrome_version():
             ['google-chrome', '--version'],
             ['/opt/google/chrome/chrome', '--version'],  # Ubuntu default path
             ['/usr/bin/google-chrome', '--version'],     # Alternative Ubuntu path
-            ['chrome', '--version'],
-            ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version']
+            ['chrome', '--version']
         ]
         for cmd in commands:
             try:
                 version = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
                 version = version.decode().strip()
-                # Handle various version string formats
-                if 'Google Chrome' in version:
-                    version = version.split('Google Chrome ')[1]
-                elif 'Google Chrome for Testing' in version:
-                    version = version.split('Google Chrome for Testing ')[1]
-                
                 # Extract version using regex
                 import re
                 version_match = re.search(r'(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?', version)
@@ -104,13 +97,13 @@ def get_compatible_chromedriver_version(chrome_major_version):
             return version, True
             
         # Try previous version if exact match fails
-        print_lg(f"No exact match found, trying Chrome version {int(chrome_major_version)-1}")
         prev_version = str(int(chrome_major_version) - 1)
+        print_lg(f"No exact match found, trying Chrome version {prev_version}")
         url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
         response = requests.get(url)
         if response.status_code == 200 and not "Error" in response.text:
             version = response.text.strip()
-            print_lg(f"Found ChromeDriver version for previous Chrome version: {version}")
+            print_lg(f"Found ChromeDriver version for previous version: {version}")
             return version, False
         
         print_lg("No compatible ChromeDriver version found")
@@ -120,7 +113,7 @@ def get_compatible_chromedriver_version(chrome_major_version):
         return None, False
 
 try:
-    # Set up directories and environment
+    # Set up directories with proper Linux paths
     driver_dir = os.path.expanduser('~/.local/bin') if is_linux or running_in_actions else os.path.join(os.path.expanduser('~'), '.webdrivers')
     os.makedirs(driver_dir, exist_ok=True)
     os.environ["PATH"] = f"{driver_dir}:{os.environ.get('PATH', '')}"
@@ -184,7 +177,7 @@ try:
     # Configure Chrome options for headless/background operation
     options = uc.ChromeOptions() if stealth_mode else webdriver.ChromeOptions()
     
-    if run_in_background or running_in_actions:
+    if run_in_background or running_in_actions or is_linux:
         options.add_argument("--headless=new")
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
@@ -210,7 +203,7 @@ try:
         options.add_experimental_option("useAutomationExtension", False)
 
     # Use guest profile in headless mode
-    if safe_mode or running_in_actions:
+    if safe_mode or running_in_actions or is_linux:
         print_lg("SAFE MODE: Will login with a guest profile, browsing history will not be saved in the browser!")
         options.add_argument("--guest")
     else:

@@ -18,15 +18,15 @@ version:    24.12.29.12.30
 # >>>>>>>>>>> Environment Settings <<<<<<<<<<<
 import os
 import platform
+from pathlib import Path
 
 # Detect environment
 running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
 is_linux = platform.system().lower() == 'linux'
 
-# Set paths based on environment
+# Set absolute paths based on environment
 current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Set downloads path based on environment
 if running_in_actions:
     downloads_path = os.path.join(current_dir, 'downloads')
 elif is_linux:
@@ -41,44 +41,47 @@ os.makedirs(downloads_path, exist_ok=True)
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
-# Keep the External Application tabs open?
-close_tabs = True                   # Close tabs in headless mode
-
-# Follow easy applied companies
-follow_companies = False            
-
-# Run in background and headless mode
+# Run in background and headless mode for Ubuntu
 run_in_background = True if is_linux or running_in_actions else False
 safe_mode = True if is_linux or running_in_actions else False
-alternate_sortby = True             
-cycle_date_posted = True            
-stop_date_cycle_at_24hr = True      
 
-# >>>>>>>>>>> Global Settings <<<<<<<<<<<
+# Browser settings
+stealth_mode = False              # Disable stealth mode for better Ubuntu compatibility
+disable_extensions = True         # Better performance on Linux
+smooth_scroll = False            # Better performance on Linux
+keep_screen_awake = True         # Keep system active during long runs
 
-# Directory and file paths
+# Close external application tabs
+close_tabs = True
+
+# Follow easy applied companies?
+follow_companies = False
+
+# Search behavior
+alternate_sortby = True
+cycle_date_posted = True
+stop_date_cycle_at_24hr = True
+
+# Click timing (increased for stability on Linux)
+click_gap = 1.5 if is_linux else 1
+
+# >>>>>>>>>>> Directory Settings <<<<<<<<<<<
+
+# File paths
 file_name = "all excels/all_applied_applications_history.csv"
 failed_file_name = "all excels/all_failed_applications_history.csv"
 logs_folder_path = "logs/"
 
-# Minimal delay for stability
-click_gap = 1                      # Wait time between clicks in seconds
+# Resume paths (Experimental & In Development)
+generated_resume_path = "all resumes/"
 
-# Chrome configuration
-disable_extensions = True          # Better performance on Linux
-stealth_mode = False              # Disable stealth mode for stability
-smooth_scroll = False if is_linux else True  # Better performance on Linux
-keep_screen_awake = True         # Prevent sleep during long runs
-
-# AI-related settings
-showAiErrorAlerts = False         # Disable alerts in headless mode
-
-# >>>>>>>>>>> RESUME GENERATOR (Experimental & In Development) <<<<<<<<<<<
-generated_resume_path = "all resumes/" # (In Development)
+# AI settings
+showAiErrorAlerts = False if is_linux or running_in_actions else True
 
 # Create required directories
 for path in [file_name, failed_file_name, logs_folder_path, downloads_path]:
-    os.makedirs(os.path.dirname(path) if '.' in path.split('/')[-1] else path, exist_ok=True)
+    dir_path = Path(path).parent if '.' in Path(path).name else Path(path)
+    dir_path.mkdir(parents=True, exist_ok=True)
     
 ############################################################################################################
 '''
