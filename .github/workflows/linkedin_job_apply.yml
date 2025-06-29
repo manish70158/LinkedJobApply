@@ -1,0 +1,132 @@
+name: LinkedIn Auto Job Applier
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  apply-to-jobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Chrome and dependencies
+        run: |
+          # Install required packages
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb python3-pip python3-venv curl x11-utils scrot
+
+          # Remove any existing Chrome installations
+          sudo apt-get remove -y google-chrome-stable
+          sudo rm -rf /etc/apt/sources.list.d/google-chrome*.list
+
+          # Install Chrome
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+          # Get Chrome version
+          CHROME_VERSION=$(google-chrome --version | grep -oP '(\d+\.\d+\.\d+\.\d+)')
+          CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | cut -d. -f1)
+          echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
+
+          # Get matching ChromeDriver version
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION")
+
+          # Download and install ChromeDriver
+          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          unzip -o chromedriver_linux64.zip
+          sudo mv -f chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+
+          # Set up directories and permissions
+          sudo mkdir -p ~/Downloads
+          sudo chmod 777 ~/Downloads
+          mkdir -p logs/screenshots
+          chmod -R 777 logs
+          mkdir -p "all excels"
+          chmod -R 777 "all excels"
+
+          # Print versions for verification
+          echo "Chrome version:"
+          google-chrome --version
+          echo "ChromeDriver version:"
+          chromedriver --version
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+
+      - name: Set up virtual display
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
+
+      - name: Configure for headless mode
+        run: |
+          # Update settings.py for headless mode
+          cat << EOF >> config/settings.py
+          
+          # Headless mode configuration for GitHub Actions
+          import os
+          running_in_actions = True
+          run_in_background = True
+          safe_mode = True
+          disable_extensions = True
+          smooth_scroll = False
+          keep_screen_awake = False
+          stealth_mode = False
+          showAiErrorAlerts = False
+          downloads_path = "/home/runner/Downloads"  # Set downloads path for GitHub Actions
+          EOF
+
+      - name: Update credentials
+        run: |
+          python -c "
+          import os
+          
+          # Read current content
+          with open('config/secrets.py', 'r') as f:
+              content = f.read()
+          
+          # Update the content
+          if 'username = os.environ.get(\"LN_USERNAME\"' not in content:
+              with open('config/secrets.py', 'a') as f:
+                  f.write('\n# Auto-inserted by GitHub Actions\n')
+                  f.write('username = os.environ.get(\"LN_USERNAME\", \"\")\n')
+                  f.write('password = os.environ.get(\"LN_PASSWORD\", \"\")\n')
+          "
+
+      - name: Run LinkedIn Auto Job Applier
+        env:
+          DISPLAY: ":99.0"
+          GITHUB_ACTIONS: "true"
+          CI: "true"
+          PYTHONPATH: "${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply"
+          DOWNLOADS_PATH: "/home/runner/Downloads"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+        run: |
+          # Print debugging info
+          echo "Python path: $PYTHONPATH"
+          echo "Downloads path: $DOWNLOADS_PATH"
+          echo "Chrome version:"
+          google-chrome --version
+          echo "ChromeDriver version:"
+          chromedriver --version
+          python runAiBot.py

@@ -49,25 +49,27 @@ def get_platform():
 def get_chrome_version():
     """Get installed Chrome version"""
     try:
+        # Prioritize actual Chrome installation over Chrome for Testing
         commands = [
-            ['google-chrome', '--version'],
             ['/opt/google/chrome/chrome', '--version'],  # Ubuntu default path
             ['/usr/bin/google-chrome', '--version'],     # Alternative Ubuntu path
-            ['chrome', '--version']
+            ['google-chrome', '--version'],              # Try general command last
         ]
         for cmd in commands:
             try:
                 version = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
                 version = version.decode().strip()
-                # Extract version using regex
-                import re
-                version_match = re.search(r'(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?', version)
-                if version_match:
-                    full_version = version_match.group(0)
-                    major_version = version_match.group(1)
-                    print_lg(f"Raw version string: {version}")
-                    print_lg(f"Detected Chrome version: {full_version} (Major: {major_version})")
-                    return major_version, full_version
+                # Handle version string formats, prioritizing actual Chrome
+                if 'Google Chrome' in version and 'Testing' not in version:
+                    version = version.split('Google Chrome ')[1]
+                    # Extract version using regex
+                    import re
+                    version_match = re.search(r'(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?', version)
+                    if version_match:
+                        full_version = version_match.group(0)
+                        major_version = version_match.group(1)
+                        print_lg(f"Detected Chrome version: {full_version} (Major: {major_version})")
+                        return major_version, full_version
             except Exception as e:
                 continue
         return None, None
@@ -80,34 +82,32 @@ def get_compatible_chromedriver_version(chrome_major_version):
     try:
         print_lg(f"Finding ChromeDriver version for Chrome {chrome_major_version}")
         
-        # Always try exact version first from both sources
-        sources = [
-            (f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}", False),
-            (f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}", True)
-        ]
+        # Try regular ChromeDriver first
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version: {version}")
+            return version, False
         
-        for url, is_testing in sources:
-            response = requests.get(url)
-            if response.status_code == 200 and not "Error" in response.text:
-                version = response.text.strip()
-                print_lg(f"Found {'Chrome for Testing' if is_testing else 'ChromeDriver'} version: {version}")
-                return version, is_testing
+        # Fall back to Chrome for Testing only if regular ChromeDriver not found
+        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found Chrome for Testing version: {version}")
+            return version, True
         
-        # If no exact match, try the previous version
+        # If no exact match, try previous version with regular ChromeDriver
         prev_version = str(int(chrome_major_version) - 1)
         print_lg(f"No exact match found, trying Chrome version {prev_version}")
-        
-        # Try previous version from both sources
-        for url, is_testing in [
-            (f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}", False),
-            (f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{prev_version}", True)
-        ]:
-            response = requests.get(url)
-            if response.status_code == 200 and not "Error" in response.text:
-                version = response.text.strip()
-                print_lg(f"Found {'Chrome for Testing' if is_testing else 'ChromeDriver'} version for previous version: {version}")
-                return version, is_testing
-        
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version for previous version: {version}")
+            return version, False
+            
         print_lg("No compatible ChromeDriver version found")
         return None, False
     except Exception as e:
