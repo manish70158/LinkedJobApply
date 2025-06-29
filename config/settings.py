@@ -45,6 +45,9 @@ os.makedirs(downloads_path, exist_ok=True)
 run_in_background = True if is_linux or running_in_actions else False
 safe_mode = True if is_linux or running_in_actions else False
 
+# Run continuously setting
+run_non_stop = False               # Set to False for GitHub Actions compatibility
+
 # Browser settings
 stealth_mode = False              # Disable stealth mode for better Ubuntu compatibility
 disable_extensions = True         # Better performance on Linux
