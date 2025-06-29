@@ -34,28 +34,41 @@ from modules.helpers import find_default_profile_directory, critical_error_log, 
 from webdriver_manager.chrome import ChromeDriverManager
 
 def get_compatible_chromedriver_version(chrome_major_version):
+    """Get compatible ChromeDriver version"""
     try:
-        # Try exact version first
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            return response.text.strip(), False
-            
-        # Fall back to Chrome for Testing
+        print_lg(f"Finding ChromeDriver version for Chrome {chrome_major_version}")
+        
+        # Try Chrome for Testing first (newer versions)
         url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
         response = requests.get(url)
         if response.status_code == 200 and not "Error" in response.text:
-            return response.text.strip(), True
+            version = response.text.strip()
+            print_lg(f"Found Chrome for Testing version: {version}")
+            return version, True
+            
+        # Fall back to regular ChromeDriver
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version: {version}")
+            return version, False
             
         # Try previous version if exact match fails
+        print_lg(f"No exact match found, trying Chrome version {chrome_major_version-1}")
         prev_version = int(chrome_major_version) - 1
         url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
         response = requests.get(url)
         if response.status_code == 200 and not "Error" in response.text:
-            return response.text.strip(), False
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version for previous Chrome version: {version}")
+            return version, False
+            
+        print_lg("No compatible ChromeDriver version found")
+        return None, False
     except Exception as e:
         print_lg(f"Error finding compatible ChromeDriver version: {e}")
-    return None, False
+        return None, False
 
 def get_platform():
     """Get the current platform for ChromeDriver download"""
@@ -76,7 +89,7 @@ def get_chrome_version():
         # Try different commands for different platforms
         commands = [
             ['google-chrome', '--version'],
-            ['/opt/google/chrome/chrome', '--version'],  # Added Ubuntu Chrome path
+            ['/opt/google/chrome/chrome', '--version'],
             ['/usr/bin/google-chrome', '--version'],
             ['chrome', '--version'],
             ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version']
@@ -85,18 +98,24 @@ def get_chrome_version():
             try:
                 version = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
                 version = version.decode().strip()
-                # Handle different version string formats
-                if 'Google Chrome' in version:
-                    version = version.split('Google Chrome ')[1]
-                elif 'Google Chrome for Testing' in version:
-                    version = version.split('Google Chrome for Testing ')[1]
-                version = version.split()[0]
-                major_version = version.split('.')[0]
-                return major_version, version
-            except:
+                # Extract version number using regex patterns
+                import re
+                # Try full version pattern first
+                version_match = re.search(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', version)
+                if not version_match:
+                    # Try shorter version pattern as fallback
+                    version_match = re.search(r'(\d+)\.(\d+)\.(\d+)', version)
+                if version_match:
+                    version = version_match.group(0)
+                    major_version = version_match.group(1)
+                    print_lg(f"Raw version string: {version}")  # Debug output
+                    return major_version, version
+            except Exception as e:
+                print_lg(f"Failed to get version from command {cmd}: {e}")  # Debug output
                 continue
         return None, None
-    except:
+    except Exception as e:
+        print_lg(f"Error in get_chrome_version: {e}")  # Debug output
         return None, None
 
 try:
