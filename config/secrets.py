@@ -18,10 +18,24 @@ version:    24.12.3.10.30
 
 # Login Credentials for LinkedIn
 import os
+from modules.helpers import print_lg
 
-# Try to get credentials from environment variables first, fall back to empty strings
-username = os.environ.get("LN_USERNAME", "")  # Your LinkedIn username/email
-password = os.environ.get("LN_PASSWORD", "")  # Your LinkedIn password
+# Try to get credentials from environment variables with debugging
+username = os.environ.get("LN_USERNAME")
+if username is None:
+    print_lg("WARNING: LN_USERNAME environment variable is not set!")
+    username = ""
+
+password = os.environ.get("LN_PASSWORD")
+if password is None:
+    print_lg("WARNING: LN_PASSWORD environment variable is not set!")
+    password = ""
+
+# Print debug info if running in GitHub Actions
+if os.environ.get('GITHUB_ACTIONS') == 'true':
+    print_lg("Running in GitHub Actions environment")
+    print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
+    print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
 
 
 ## Artificial Intelligence (Beta Not-Recommended)

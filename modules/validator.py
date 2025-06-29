@@ -29,23 +29,35 @@ def check_boolean(var: bool, var_name: str) -> bool | ValueError:
     raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects a Boolean input `True` or `False`, not "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to either `True` or `False` (case-sensitive, T and F must be CAPITAL/uppercase).\nExample: `{var_name} = True`\n\nNOTE: Do NOT surround Boolean values in quotes ("True")X !\n\n')
 
 from config.settings import running_in_actions
+from modules.helpers import print_lg
 def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
     '''
     Validates if the given variable is a string and meets the minimum length requirement.
     '''
+    # Debug logging for GitHub Actions
+    if running_in_actions and var_name in ['username', 'password']:
+        print_lg(f"Validating {var_name} in GitHub Actions environment")
+        print_lg(f"Variable type: {type(var)}")
+        print_lg(f"Variable length: {len(var) if var else 0}")
+        print_lg(f"Environment variable present: {'Yes' if var else 'No'}")
+
     if not isinstance(var, str):
         raise TypeError(f"Invalid input type for {var_name}. Expecting String!")
     
-    # Skip length validation for credentials in GitHub Actions environment
+    # Special handling for credentials in GitHub Actions
     is_credential = var_name in ['username', 'password']
-    if not running_in_actions or not is_credential:
-        if len(var) < min_length:
-            raise ValueError(f"Invalid input for {var_name}. Expecting a String of length at least {min_length}!")
-    elif is_credential and len(var.strip()) == 0:
-        raise ValueError(f"Missing required environment variable for {var_name}!")
+    if is_credential and running_in_actions:
+        if not var or len(var.strip()) == 0:
+            raise ValueError(f"Environment variable {var_name} is not set in GitHub Actions!")
+        return True
+    
+    # Regular validation for other cases
+    if len(var) < min_length:
+        raise ValueError(f"Invalid input for {var_name}. Expecting a String of length at least {min_length}!")
     
     if options and var not in options:
         raise ValueError(f"Invalid input for {var_name}. Value must be one of {options}!")
+    
     return True
 
 def check_list(var: list, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
@@ -170,6 +182,13 @@ def validate_secrets() -> None | ValueError | TypeError:
     global __validation_file_path
     __validation_file_path = "config/secrets.py"
 
+    # Debug logging for GitHub Actions
+    if running_in_actions:
+        print_lg("Validating secrets in GitHub Actions environment")
+        from config.secrets import username, password
+        print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
+        print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
+
     check_string(username, "username", min_length=5)
     check_string(password, "password", min_length=5)
 
@@ -177,16 +196,9 @@ def validate_secrets() -> None | ValueError | TypeError:
     check_string(llm_api_url, "llm_api_url", min_length=5)
     check_string(llm_api_key, "llm_api_key")
     check_string(llm_model, "llm_model")
-    # check_string(llm_embedding_model, "llm_embedding_model")
     check_boolean(stream_output, "stream_output")
-    
-    ##> ------ Yang Li : MARKYangL - Feature ------
-    # Validate DeepSeek configuration
     check_string(ai_provider, "ai_provider", ["openai", "deepseek","ollama", "gemini"])
-    # check_string(deepseek_api_url, "deepseek_api_url", min_length=5)
-    # check_string(deepseek_api_key, "deepseek_api_key")
-    # check_string(deepseek_model, "deepseek_model", ["deepseek-chat", "deepseek-reasoner"])
-    ##<
+
 
 
 from config.settings import *
