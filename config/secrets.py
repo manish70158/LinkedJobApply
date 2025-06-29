@@ -20,15 +20,24 @@ version:    24.12.3.10.30
 import os
 from modules.helpers import print_lg
 
-def get_required_env_var(var_name: str) -> str:
+def get_required_env_var(var_name: str, min_length: int = 5) -> str:
     """Get an environment variable that is required in GitHub Actions"""
-    value = os.environ.get(var_name)
+    value = os.environ.get(var_name, "")
+    
+    # Special handling for GitHub Actions environment
     if os.environ.get('GITHUB_ACTIONS') == 'true':
         if not value or len(value.strip()) == 0:
-            print_lg(f"ERROR: Required environment variable {var_name} is not set in GitHub Actions!")
-        else:
-            print_lg(f"Environment variable {var_name} is properly set")
-    return value if value else ""
+            raise ValueError(f"ERROR: Required environment variable {var_name} is not set in GitHub Actions!\n"
+                           f"Please set {var_name} as a repository secret in GitHub:\n"
+                           f"1. Go to your repository settings\n"
+                           f"2. Navigate to Settings > Secrets and variables > Actions\n"
+                           f"3. Click 'New repository secret'\n"
+                           f"4. Add {var_name} with your value")
+        print_lg(f"✓ Environment variable {var_name} is properly configured (length: {len(value)})")
+        return value
+
+    # For local development, allow empty values
+    return value
 
 # Get credentials with proper error handling
 username = get_required_env_var("LN_USERNAME")
@@ -37,8 +46,6 @@ password = get_required_env_var("LN_PASSWORD")
 # Debug output for GitHub Actions
 if os.environ.get('GITHUB_ACTIONS') == 'true':
     print_lg("Running in GitHub Actions environment")
-    print_lg(f"Username length: {len(username)}")
-    print_lg(f"Password length: {len(password)}")
     print_lg(f"GITHUB_ACTIONS: {os.environ.get('GITHUB_ACTIONS')}")
     print_lg(f"CI: {os.environ.get('CI')}")
 

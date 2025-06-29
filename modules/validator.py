@@ -169,6 +169,19 @@ def validate_search() -> None | ValueError | TypeError:
 
 
 from config.secrets import *
+def check_github_actions_secrets(var: str, var_name: str) -> bool:
+    """Special validation for GitHub Actions secrets"""
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        if not var or len(var.strip()) == 0:
+            raise ValueError(f"Required secret {var_name} is not set in GitHub Actions.\n"
+                           "Please configure it in your repository:\n"
+                           "1. Go to Settings > Secrets and variables > Actions\n"
+                           "2. Click 'New repository secret'\n"
+                           f"3. Add {var_name} with your value")
+        print_lg(f"✓ GitHub Actions secret {var_name} is properly configured")
+        return True
+    return False
+
 def validate_secrets() -> None | ValueError | TypeError:
     '''
     Validates all variables in the `/config/secrets.py` file.
@@ -181,9 +194,12 @@ def validate_secrets() -> None | ValueError | TypeError:
         print_lg("Validating secrets in GitHub Actions environment")
         print_lg(f"GITHUB_ACTIONS: {os.environ.get('GITHUB_ACTIONS')}")
         print_lg(f"CI: {os.environ.get('CI')}")
-        print_lg(f"LN_USERNAME present: {'Yes' if os.environ.get('LN_USERNAME') else 'No'}")
-        print_lg(f"LN_PASSWORD present: {'Yes' if os.environ.get('LN_PASSWORD') else 'No'}")
 
+    # Special handling for GitHub Actions secrets
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        check_github_actions_secrets(os.environ.get('LN_USERNAME'), 'LN_USERNAME')
+        check_github_actions_secrets(os.environ.get('LN_PASSWORD'), 'LN_PASSWORD')
+    
     # Validate credentials
     check_string(username, "username", min_length=5)
     check_string(password, "password", min_length=5)

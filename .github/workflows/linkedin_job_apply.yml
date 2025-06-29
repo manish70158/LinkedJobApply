@@ -2,9 +2,7 @@ name: LinkedIn Auto Job Applier
 
 on:
   schedule:
-    # Run every 6 hours
     - cron: '0 */6 * * *'
-  # Allows manual triggering
   workflow_dispatch:
 
 jobs:
@@ -12,21 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check required secrets
+        env:
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
         run: |
-          if [ -z "${{ secrets.LN_USERNAME }}" ] || [ -z "${{ secrets.LN_PASSWORD }}" ]; then
-            echo "Error: Required secrets LN_USERNAME and/or LN_PASSWORD are not set"
+          if [[ -z "$LN_USERNAME" ]]; then
+            echo "Error: LN_USERNAME secret is not set"
+            echo "Please set LN_USERNAME in your repository secrets:"
+            echo "1. Go to Settings > Secrets and variables > Actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Add LN_USERNAME with your LinkedIn email/username"
             exit 1
           fi
-          echo "Required secrets are properly configured"
+          if [[ -z "$LN_PASSWORD" ]]; then
+            echo "Error: LN_PASSWORD secret is not set"
+            echo "Please set LN_PASSWORD in your repository secrets:"
+            echo "1. Go to Settings > Secrets and variables > Actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Add LN_PASSWORD with your LinkedIn password"
+            exit 1
+          fi
+          echo "✓ Required secrets are properly configured"
 
   apply-to-jobs:
     needs: verify-secrets
     runs-on: ubuntu-latest
     
-    env:
-      GITHUB_ACTIONS: "true"
-      CI: "true"
-      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -37,28 +46,43 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      # ... existing Chrome and Python setup steps ...
-
-      - name: Set up environment variables
+      - name: Install dependencies
         run: |
-          echo "Setting up environment variables..."
-          echo "GITHUB_ACTIONS=true" >> $GITHUB_ENV
-          echo "CI=true" >> $GITHUB_ENV
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+          
+      - name: Set up virtual display
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
-          echo "LN_USERNAME=${{ secrets.LN_USERNAME }}" >> $GITHUB_ENV
-          echo "LN_PASSWORD=${{ secrets.LN_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Configure for headless mode
+        run: |
+          # Create required directories
+          sudo mkdir -p /home/runner/Downloads
+          sudo chmod 777 /home/runner/Downloads
+          mkdir -p logs/screenshots
+          chmod -R 777 logs
           
-          # Verify environment variables are set
-          if [ -z "${LN_USERNAME}" ]; then
-            echo "Error: LN_USERNAME is not set"
-            exit 1
-          fi
-          if [ -z "${LN_PASSWORD}" ]; then
-            echo "Error: LN_PASSWORD is not set"
-            exit 1
-          fi
+          # Update settings.py for headless mode
+          cat << EOF >> config/settings.py
           
-          echo "Environment variables configured successfully"
+          # Headless mode configuration for GitHub Actions
+          import os
+          running_in_actions = True
+          run_in_background = True
+          safe_mode = True
+          disable_extensions = True
+          smooth_scroll = False
+          keep_screen_awake = False
+          stealth_mode = False
+          showAiErrorAlerts = False
+          downloads_path = "/home/runner/Downloads"
+          EOF
 
       - name: Run LinkedIn Auto Job Applier
         env:
@@ -73,13 +97,12 @@ jobs:
         run: |
           # Print environment info (without exposing secrets)
           echo "Environment configuration:"
-          echo "Python path: $PYTHONPATH"
-          echo "Downloads path: $DOWNLOADS_PATH"
-          echo "Display: $DISPLAY"
           echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
           echo "CI: $CI"
+          echo "DISPLAY: $DISPLAY"
+          echo "PYTHONPATH: $PYTHONPATH"
+          echo "DOWNLOADS_PATH: $DOWNLOADS_PATH"
           echo "LN_USERNAME is set: ${{ secrets.LN_USERNAME != '' }}"
           echo "LN_PASSWORD is set: ${{ secrets.LN_PASSWORD != '' }}"
           
-          # Run the bot
           python runAiBot.py
