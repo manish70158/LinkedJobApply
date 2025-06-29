@@ -1,4 +1,4 @@
-name: LinkedIn Auto Job Applier New
+name: LinkedIn Auto Job Applier V2
 
 on:
   schedule:
@@ -47,18 +47,22 @@ jobs:
 
       - name: Set up ChromeDriver
         run: |
-          # Try to get matching ChromeDriver version
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+          # Try Chrome for Testing first (newer approach)
+          echo "Trying Chrome for Testing version..."
+          CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+          IS_CHROME_FOR_TESTING=true
           
           if [ -z "$CHROMEDRIVER_VERSION" ]; then
-            echo "No exact match found, trying Chrome for Testing..."
-            CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+            echo "No Chrome for Testing version found, trying legacy ChromeDriver..."
+            CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${{ env.CHROME_MAJOR_VERSION }}")
+            IS_CHROME_FOR_TESTING=false
           fi
           
           if [ -z "$CHROMEDRIVER_VERSION" ]; then
-            echo "No Chrome for Testing version found, trying previous version..."
+            echo "No exact match found, trying previous Chrome version..."
             PREV_VERSION=$((${{ env.CHROME_MAJOR_VERSION }}-1))
             CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$PREV_VERSION")
+            IS_CHROME_FOR_TESTING=false
           fi
           
           if [ -z "$CHROMEDRIVER_VERSION" ]; then
@@ -68,6 +72,7 @@ jobs:
           
           echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
           echo "CHROMEDRIVER_VERSION=$CHROMEDRIVER_VERSION" >> $GITHUB_ENV
+          echo "IS_CHROME_FOR_TESTING=$IS_CHROME_FOR_TESTING" >> $GITHUB_ENV
           
           # Create directories for ChromeDriver
           sudo mkdir -p /usr/local/bin ~/.local/bin
@@ -75,13 +80,23 @@ jobs:
           # Download and install ChromeDriver
           TEMP_DIR=$(mktemp -d)
           cd "$TEMP_DIR"
-          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-          unzip -o chromedriver_linux64.zip
           
-          # Install in both system and user locations
-          sudo cp -f chromedriver /usr/local/bin/
+          if [ "$IS_CHROME_FOR_TESTING" = true ]; then
+            echo "Downloading Chrome for Testing ChromeDriver..."
+            wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
+            unzip -o chromedriver-linux64.zip
+            sudo cp -f chromedriver-linux64/chromedriver /usr/local/bin/
+            cp -f chromedriver-linux64/chromedriver ~/.local/bin/
+          else
+            echo "Downloading legacy ChromeDriver..."
+            wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+            unzip -o chromedriver_linux64.zip
+            sudo cp -f chromedriver /usr/local/bin/
+            cp -f chromedriver ~/.local/bin/
+          fi
+          
+          # Set permissions
           sudo chmod +x /usr/local/bin/chromedriver
-          cp -f chromedriver ~/.local/bin/
           chmod +x ~/.local/bin/chromedriver
           
           # Clean up
@@ -179,12 +194,14 @@ jobs:
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
           CHROME_VERSION: ${{ env.CHROME_VERSION }}
           CHROMEDRIVER_VERSION: ${{ env.CHROMEDRIVER_VERSION }}
+          IS_CHROME_FOR_TESTING: ${{ env.IS_CHROME_FOR_TESTING }}
         run: |
           # Print environment info
           echo "Python path: $PYTHONPATH"
           echo "Downloads path: $DOWNLOADS_PATH"
           echo "Chrome version: $CHROME_VERSION"
           echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          echo "Using Chrome for Testing: $IS_CHROME_FOR_TESTING"
           
           # Run the bot
           python runAiBot.py
