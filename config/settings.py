@@ -15,10 +15,21 @@ version:    24.12.29.12.30
 
 ###################################################### CONFIGURE YOUR BOT HERE ######################################################
 
-# >>>>>>>>>>> GitHub Actions Settings <<<<<<<<<<<
+# >>>>>>>>>>> Environment Settings <<<<<<<<<<<
 import os
+import platform
+
+# Detect environment
 running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
-downloads_path = os.environ.get('DOWNLOADS_PATH', os.path.expanduser('~/Downloads'))
+is_linux = platform.system().lower() == 'linux'
+
+# Set paths based on environment
+if running_in_actions:
+    downloads_path = '/home/runner/Downloads'
+elif is_linux:
+    downloads_path = os.path.expanduser('~/Downloads')
+else:
+    downloads_path = os.path.expanduser('~/Downloads')
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
