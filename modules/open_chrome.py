@@ -33,43 +33,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from modules.helpers import find_default_profile_directory, critical_error_log, print_lg
 from webdriver_manager.chrome import ChromeDriverManager
 
-def get_compatible_chromedriver_version(chrome_major_version):
-    """Get compatible ChromeDriver version"""
-    try:
-        print_lg(f"Finding ChromeDriver version for Chrome {chrome_major_version}")
-        
-        # Try regular ChromeDriver first (more stable)
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found ChromeDriver version: {version}")
-            return version, False
-            
-        # Try Chrome for Testing as fallback
-        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found Chrome for Testing version: {version}")
-            return version, True
-            
-        # Try previous version if needed
-        print_lg(f"No exact match found, trying Chrome version {int(chrome_major_version)-1}")
-        prev_version = str(int(chrome_major_version) - 1)
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found ChromeDriver version for previous Chrome version: {version}")
-            return version, False
-            
-        print_lg("No compatible ChromeDriver version found")
-        return None, False
-    except Exception as e:
-        print_lg(f"Error finding compatible ChromeDriver version: {e}")
-        return None, False
-
 def get_platform():
     """Get the current platform for ChromeDriver download"""
     import platform
@@ -88,8 +51,8 @@ def get_chrome_version():
     try:
         commands = [
             ['google-chrome', '--version'],
-            ['/opt/google/chrome/chrome', '--version'],
-            ['/usr/bin/google-chrome', '--version'],
+            ['/opt/google/chrome/chrome', '--version'],  # Ubuntu default path
+            ['/usr/bin/google-chrome', '--version'],     # Alternative Ubuntu path
             ['chrome', '--version'],
             ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version']
         ]
@@ -97,18 +60,19 @@ def get_chrome_version():
             try:
                 version = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
                 version = version.decode().strip()
-                # More robust version parsing with explicit error handling
+                # Handle various version string formats
                 if 'Google Chrome' in version:
                     version = version.split('Google Chrome ')[1]
                 elif 'Google Chrome for Testing' in version:
                     version = version.split('Google Chrome for Testing ')[1]
                 
-                # Extract version using regex to handle all formats
+                # Extract version using regex
                 import re
                 version_match = re.search(r'(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?', version)
                 if version_match:
                     full_version = version_match.group(0)
                     major_version = version_match.group(1)
+                    print_lg(f"Raw version string: {version}")
                     print_lg(f"Detected Chrome version: {full_version} (Major: {major_version})")
                     return major_version, full_version
             except Exception as e:
@@ -118,48 +82,58 @@ def get_chrome_version():
         print_lg(f"Error in get_chrome_version: {e}")
         return None, None
 
+def get_compatible_chromedriver_version(chrome_major_version):
+    """Get compatible ChromeDriver version"""
+    try:
+        print_lg(f"Finding ChromeDriver version for Chrome {chrome_major_version}")
+        
+        # Try regular ChromeDriver first (more stable)
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version: {version}")
+            return version, False
+            
+        # Fall back to Chrome for Testing
+        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found Chrome for Testing version: {version}")
+            return version, True
+            
+        # Try previous version if exact match fails
+        print_lg(f"No exact match found, trying Chrome version {int(chrome_major_version)-1}")
+        prev_version = str(int(chrome_major_version) - 1)
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            version = response.text.strip()
+            print_lg(f"Found ChromeDriver version for previous Chrome version: {version}")
+            return version, False
+        
+        print_lg("No compatible ChromeDriver version found")
+        return None, False
+    except Exception as e:
+        print_lg(f"Error finding compatible ChromeDriver version: {e}")
+        return None, False
+
 try:
-    # Check for existing Chrome instances and create lock file in /tmp for Ubuntu
-    lock_file = '/tmp/chrome.lock' if os.name == 'posix' else os.path.join(os.path.expanduser('~'), '.chrome_lock')
-    if os.path.exists(lock_file):
-        try:
-            os.remove(lock_file)
-        except:
-            raise Exception("Chrome appears to be already running. Please close all Chrome windows and try again.")
-    
-    # Create lock file
-    with open(lock_file, 'w') as f:
-        f.write(str(os.getpid()))
-
-    # Set up directories with proper Linux paths
-    make_directories([file_name, failed_file_name, logs_folder_path+"/screenshots", default_resume_path, generated_resume_path+"/temp", downloads_path])
-
-    # Set up local driver directory in ~/.local/bin for Ubuntu
-    if os.name == 'posix':
-        driver_dir = os.path.expanduser('~/.local/bin')
-    else:
-        driver_dir = os.path.join(os.path.expanduser('~'), '.webdrivers')
+    # Set up directories and environment
+    driver_dir = os.path.expanduser('~/.local/bin') if is_linux or running_in_actions else os.path.join(os.path.expanduser('~'), '.webdrivers')
     os.makedirs(driver_dir, exist_ok=True)
     os.environ["PATH"] = f"{driver_dir}:{os.environ.get('PATH', '')}"
-
-    # Clean up any existing ChromeDriver files
-    for file in ['chromedriver', 'chromedriver.zip']:
-        file_path = os.path.join(driver_dir, file)
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except:
-            pass
 
     # Get Chrome version and compatible chromedriver
     chrome_major_version, chrome_full_version = get_chrome_version()
     if not chrome_major_version:
         raise Exception("Failed to detect Chrome version. Please ensure Chrome is installed.")
-
+    
     chromedriver_version, is_chrome_for_testing = get_compatible_chromedriver_version(chrome_major_version)
     if not chromedriver_version:
         raise Exception(f"Failed to find compatible ChromeDriver version for Chrome {chrome_major_version}")
-
+    
     print_lg(f"Using {'Chrome for Testing' if is_chrome_for_testing else 'ChromeDriver'} version: {chromedriver_version}")
     
     # Download and install correct chromedriver
@@ -169,15 +143,9 @@ try:
     else:
         driver_url = f"https://chromedriver.storage.googleapis.com/{chromedriver_version}/chromedriver_{platform}.zip"
     
-    print_lg(f"Downloading ChromeDriver from: {driver_url}")
-    r = requests.get(driver_url)
-    if r.status_code != 200:
-        raise Exception(f"Failed to download ChromeDriver from {driver_url}")
-        
     # Clean up existing ChromeDriver files
     chromedriver_path = os.path.join(driver_dir, 'chromedriver')
     driver_zip = os.path.join(driver_dir, "chromedriver.zip")
-    
     try:
         if os.path.exists(chromedriver_path):
             os.remove(chromedriver_path)
@@ -186,19 +154,34 @@ try:
     except:
         pass
 
+    # Download and extract ChromeDriver
+    print_lg(f"Downloading ChromeDriver from: {driver_url}")
+    r = requests.get(driver_url)
+    if r.status_code != 200:
+        raise Exception(f"Failed to download ChromeDriver from {driver_url}")
+    
     with open(driver_zip, 'wb') as f:
         f.write(r.content)
     
     # Extract with platform-specific paths
-    if platform == "linux64":
-        os.system(f"cd {driver_dir} && unzip -o chromedriver.zip && chmod +x chromedriver")
-    else:
-        os.system(f"cd {driver_dir} && unzip -o chromedriver.zip")
+    extract_dir = os.path.join(driver_dir, 'temp_extract')
+    os.makedirs(extract_dir, exist_ok=True)
     
-    if os.path.exists(driver_zip):
+    os.system(f"cd {extract_dir} && unzip -o {driver_zip}")
+    if is_chrome_for_testing:
+        os.system(f"cp -f {extract_dir}/chromedriver-{platform}/chromedriver {chromedriver_path}")
+    else:
+        os.system(f"cp -f {extract_dir}/chromedriver {chromedriver_path}")
+    os.system(f"chmod +x {chromedriver_path}")
+    
+    # Clean up temporary files
+    try:
+        os.system(f"rm -rf {extract_dir}")
         os.remove(driver_zip)
+    except:
+        pass
 
-    # Configure Chrome options
+    # Configure Chrome options for headless/background operation
     options = uc.ChromeOptions() if stealth_mode else webdriver.ChromeOptions()
     
     if run_in_background or running_in_actions:
@@ -237,13 +220,13 @@ try:
         else:
             print_lg("Default profile directory not found. Logging in with a guest profile, Web history will not be saved!")
 
+    # Initialize WebDriver
     if stealth_mode:
         print_lg("Using undetected-chromedriver mode...")
         driver = uc.Chrome(options=options)
     else:
         print_lg("Using standard selenium webdriver...")
-        driver_path = ChromeDriverManager().install()
-        service = Service(executable_path=driver_path)
+        service = Service(executable_path=chromedriver_path)
         driver = webdriver.Chrome(service=service, options=options)
 
     driver.maximize_window()

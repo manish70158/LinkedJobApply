@@ -10,22 +10,17 @@ fi
 apt-get update
 apt-get install -y wget unzip xvfb python3-pip python3-venv curl
 
-# Clean up any existing Chrome/ChromeDriver installations
-sudo rm -rf /usr/bin/google-chrome /usr/local/bin/chromedriver chrome-linux64* chromedriver-linux64*
-
-# Get Chrome version
-CHROME_VERSION=$(/opt/google/chrome/chrome --version 2>/dev/null || google-chrome --version 2>/dev/null || echo "")
-if [ -z "$CHROME_VERSION" ]; then
-    echo "Chrome not found. Installing Chrome..."
+# Install Chrome if not present
+if ! command -v google-chrome &> /dev/null; then
     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
     apt-get update
     apt-get install -y google-chrome-stable
-    CHROME_VERSION=$(google-chrome --version)
 fi
 
-# Extract major version
-CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | grep -oP '(\d+)' | head -1)
+# Get Chrome version
+CHROME_VERSION=$(google-chrome --version | grep -oP '(\d+\.\d+\.\d+\.\d+)')
+CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | cut -d. -f1)
 echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
 
 # Try to get matching ChromeDriver version
@@ -53,13 +48,16 @@ echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR" || exit 1
 
+# Clean up any existing ChromeDriver installations
+sudo rm -rf /usr/local/bin/chromedriver
+
 # Download and install ChromeDriver
 wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
 unzip -o chromedriver_linux64.zip
 sudo cp -f chromedriver /usr/local/bin/
 sudo chmod +x /usr/local/bin/chromedriver
 
-# Clean up
+# Clean up temporary files
 cd - || exit 1
 rm -rf "$TEMP_DIR"
 
@@ -69,10 +67,18 @@ chmod 777 ~/Downloads
 mkdir -p logs/screenshots
 chmod -R 777 logs
 
-# Set up Python environment
+# Create Python virtual environment
 python3 -m venv venv
 source venv/bin/activate
+
+# Upgrade pip and install dependencies
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
+
+# Print versions for verification
+echo "Chrome version:"
+google-chrome --version
+echo "ChromeDriver version:"
+chromedriver --version
 
 echo "Setup complete! The environment is ready to run the LinkedIn Auto Job Applier."

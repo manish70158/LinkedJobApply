@@ -18,13 +18,12 @@ version:    24.12.29.12.30
 # >>>>>>>>>>> Environment Settings <<<<<<<<<<<
 import os
 import platform
-from pathlib import Path
 
 # Detect environment
 running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
 is_linux = platform.system().lower() == 'linux'
 
-# Set absolute paths based on environment
+# Set paths based on environment
 current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Set downloads path based on environment
@@ -32,17 +31,13 @@ if running_in_actions:
     downloads_path = os.path.join(current_dir, 'downloads')
 elif is_linux:
     downloads_path = os.path.expanduser('~/Downloads')
+    if not os.path.exists(downloads_path):
+        downloads_path = os.path.join(current_dir, 'downloads')
 else:
     downloads_path = os.path.expanduser('~/Downloads')
 
-# Safely create downloads directory if it doesn't exist
-try:
-    Path(downloads_path).mkdir(parents=True, exist_ok=True)
-except Exception as e:
-    print(f"Warning: Could not create downloads directory: {e}")
-    # Fall back to current directory if we can't create downloads directory
-    downloads_path = os.path.join(current_dir, 'downloads')
-    Path(downloads_path).mkdir(parents=True, exist_ok=True)
+# Ensure downloads directory exists
+os.makedirs(downloads_path, exist_ok=True)
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
@@ -52,11 +47,12 @@ close_tabs = True                   # Close tabs in headless mode
 # Follow easy applied companies
 follow_companies = False            
 
-# Run in background and headless mode for GitHub Actions
-run_in_background = True if running_in_actions else False
-safe_mode = True if running_in_actions else False
-stealth_mode = False
-disable_extensions = True if running_in_actions else False
+# Run in background and headless mode
+run_in_background = True if is_linux or running_in_actions else False
+safe_mode = True if is_linux or running_in_actions else False
+alternate_sortby = True             
+cycle_date_posted = True            
+stop_date_cycle_at_24hr = True      
 
 # >>>>>>>>>>> Global Settings <<<<<<<<<<<
 
@@ -69,11 +65,10 @@ logs_folder_path = "logs/"
 click_gap = 1                      # Wait time between clicks in seconds
 
 # Chrome configuration
-disable_extensions = False          # Better performance
-safe_mode = False                  # Use guest profile for stability
-smooth_scroll = True              # Better performance
+disable_extensions = True          # Better performance on Linux
+stealth_mode = False              # Disable stealth mode for stability
+smooth_scroll = False if is_linux else True  # Better performance on Linux
 keep_screen_awake = True         # Prevent sleep during long runs
-stealth_mode = False             # Disable stealth mode for stability
 
 # AI-related settings
 showAiErrorAlerts = False         # Disable alerts in headless mode
@@ -81,10 +76,10 @@ showAiErrorAlerts = False         # Disable alerts in headless mode
 # >>>>>>>>>>> RESUME GENERATOR (Experimental & In Development) <<<<<<<<<<<
 generated_resume_path = "all resumes/" # (In Development)
 
-
-
-
-
+# Create required directories
+for path in [file_name, failed_file_name, logs_folder_path, downloads_path]:
+    os.makedirs(os.path.dirname(path) if '.' in path.split('/')[-1] else path, exist_ok=True)
+    
 ############################################################################################################
 '''
 THANK YOU for using my tool 😊! Wishing you the best in your job hunt 🙌🏻!
