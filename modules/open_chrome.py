@@ -35,26 +35,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 def get_compatible_chromedriver_version(chrome_major_version):
     try:
-        # Try Chrome for Testing first
-        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            return response.text.strip(), True
-            
-        # Fall back to regular ChromeDriver
+        # Try exact version first
         url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
         response = requests.get(url)
         if response.status_code == 200 and not "Error" in response.text:
             return response.text.strip(), False
             
-        # Try previous versions
-        for version in range(int(chrome_major_version)-1, int(chrome_major_version)-5, -1):
-            url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{version}"
-            response = requests.get(url)
-            if response.status_code == 200 and not "Error" in response.text:
-                return response.text.strip(), False
-    except:
-        pass
+        # Fall back to Chrome for Testing
+        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            return response.text.strip(), True
+            
+        # Try previous version if exact match fails
+        prev_version = int(chrome_major_version) - 1
+        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
+        response = requests.get(url)
+        if response.status_code == 200 and not "Error" in response.text:
+            return response.text.strip(), False
+    except Exception as e:
+        print_lg(f"Error finding compatible ChromeDriver version: {e}")
     return None, False
 
 def get_platform():
@@ -75,22 +75,22 @@ def get_chrome_version():
     try:
         # Try different commands for different platforms
         commands = [
-            ['google-chrome', '--version'],  # Ubuntu/Linux
-            ['/usr/bin/google-chrome', '--version'],  # Alternative Linux path
+            ['google-chrome', '--version'],
+            ['/opt/google/chrome/chrome', '--version'],  # Added Ubuntu Chrome path
+            ['/usr/bin/google-chrome', '--version'],
             ['chrome', '--version'],
-            ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version'],
-            ['reg', 'query', 'HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon', '/v', 'version']
+            ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version']
         ]
         for cmd in commands:
             try:
                 version = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
                 version = version.decode().strip()
-                # Handle Ubuntu-style version string
+                # Handle different version string formats
                 if 'Google Chrome' in version:
                     version = version.split('Google Chrome ')[1]
                 elif 'Google Chrome for Testing' in version:
                     version = version.split('Google Chrome for Testing ')[1]
-                version = version.split()[0]  # Get first word in case of extra text
+                version = version.split()[0]
                 major_version = version.split('.')[0]
                 return major_version, version
             except:
@@ -138,10 +138,47 @@ try:
         raise Exception("Failed to detect Chrome version. Please ensure Chrome is installed.")
 
     print_lg(f"Detected Chrome version: {chrome_full_version} (Major: {chrome_major_version})")
+    chromedriver_version, is_chrome_for_testing = get_compatible_chromedriver_version(chrome_major_version)
     
-    # Download and install ChromeDriver using webdriver_manager
-    from webdriver_manager.chrome import ChromeDriverManager
-    from selenium.webdriver.chrome.service import Service
+    if not chromedriver_version:
+        raise Exception(f"Failed to find compatible ChromeDriver version for Chrome {chrome_major_version}")
+
+    print_lg(f"Using {'Chrome for Testing' if is_chrome_for_testing else 'ChromeDriver'} version: {chromedriver_version}")
+    os.environ["CHROMEDRIVER_VERSION"] = chromedriver_version
+    
+    # Download and install correct chromedriver
+    platform = get_platform()
+    if is_chrome_for_testing:
+        driver_url = f"https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/{chromedriver_version}/{platform}/chromedriver-{platform}.zip"
+    else:
+        driver_url = f"https://chromedriver.storage.googleapis.com/{chromedriver_version}/chromedriver_{platform}.zip"
+    
+    # Clean up existing ChromeDriver files
+    chromedriver_path = os.path.join(driver_dir, 'chromedriver')
+    driver_zip = os.path.join(driver_dir, "chromedriver.zip")
+    
+    try:
+        if os.path.exists(chromedriver_path):
+            os.remove(chromedriver_path)
+        if os.path.exists(driver_zip):
+            os.remove(driver_zip)
+    except:
+        pass
+
+    # Download and install ChromeDriver
+    print_lg(f"Downloading ChromeDriver from: {driver_url}")
+    r = requests.get(driver_url)
+    with open(driver_zip, 'wb') as f:
+        f.write(r.content)
+    
+    # Extract with platform-specific paths
+    if platform == "linux64":
+        os.system(f"cd {driver_dir} && unzip -o chromedriver.zip && chmod +x chromedriver")
+    else:
+        os.system(f"cd {driver_dir} && unzip -o chromedriver.zip")
+    
+    if os.path.exists(driver_zip):
+        os.remove(driver_zip)
 
     # Configure Chrome options
     options = uc.ChromeOptions() if stealth_mode else webdriver.ChromeOptions()
