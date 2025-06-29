@@ -77,6 +77,10 @@ def ai_create_openai_client() -> OpenAI:
         if not use_AI:
             raise ValueError("AI is not enabled! Please enable it by setting `use_AI = True` in `secrets.py` in `config` folder.")
         
+        if ai_provider.lower() != "openai":
+            print_lg(f"OpenAI is not the configured AI provider. Current provider: {ai_provider}")
+            return None
+            
         client = OpenAI(base_url=llm_api_url, api_key=llm_api_key)
 
         models = ai_get_models_list(client)

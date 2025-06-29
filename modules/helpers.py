@@ -37,12 +37,29 @@ def make_directories(paths: list[str]) -> None:
     '''
     for path in paths:  
         path = path.replace("//","/")
-        if '/' in path and '.' in path: path = path[:path.rfind('/')]
+        if '/' in path and '.' in path: 
+            path = path[:path.rfind('/')]
         try:
-            if not os.path.exists(path):
-                os.makedirs(path)
+            # Handle both absolute and relative paths
+            if path.startswith('/'):
+                # Absolute path - create if we have permissions
+                if os.access(os.path.dirname(path), os.W_OK):
+                    os.makedirs(path, exist_ok=True)
+                else:
+                    print(f'No write permission for "{path}", skipping...')
+            else:
+                # Relative path - create in current directory
+                os.makedirs(path, exist_ok=True)
         except Exception as e:
-            print(f'Error while creating directory "{path}": ', e)
+            print(f'Error while creating directory "{path}": {e}')
+            # Try creating in the current working directory as fallback
+            try:
+                relative_path = os.path.basename(path)
+                if relative_path:
+                    os.makedirs(relative_path, exist_ok=True)
+                    print(f'Created fallback directory "{relative_path}" in current working directory')
+            except Exception as e2:
+                print(f'Failed to create fallback directory: {e2}')
 
 
 def find_default_profile_directory() -> str | None:

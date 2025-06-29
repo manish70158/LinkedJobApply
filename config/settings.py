@@ -15,6 +15,11 @@ version:    24.12.29.12.30
 
 ###################################################### CONFIGURE YOUR BOT HERE ######################################################
 
+# >>>>>>>>>>> GitHub Actions Settings <<<<<<<<<<<
+import os
+running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
+downloads_path = os.environ.get('DOWNLOADS_PATH', '/home/runner/Downloads') if running_in_actions else os.path.expanduser('~/Downloads')
+
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
 # Keep the External Application tabs open?

@@ -13,7 +13,11 @@ version:    24.12.29.12.30
 '''
 
 from modules.helpers import make_directories
-from config.settings import run_in_background, stealth_mode, disable_extensions, safe_mode, file_name, failed_file_name, logs_folder_path, generated_resume_path
+from config.settings import (
+    run_in_background, stealth_mode, disable_extensions, safe_mode, 
+    file_name, failed_file_name, logs_folder_path, generated_resume_path,
+    running_in_actions, downloads_path
+)
 from config.questions import default_resume_path
 if stealth_mode:
     import undetected_chromedriver as uc
@@ -26,28 +30,44 @@ from selenium.webdriver.support.ui import WebDriverWait
 from modules.helpers import find_default_profile_directory, critical_error_log, print_lg
 
 try:
-    make_directories([file_name,failed_file_name,logs_folder_path+"/screenshots",default_resume_path,generated_resume_path+"/temp"])
+    make_directories([file_name, failed_file_name, logs_folder_path+"/screenshots", default_resume_path, generated_resume_path+"/temp", downloads_path])
 
     # Set up WebDriver with Chrome Profile
     options = uc.ChromeOptions() if stealth_mode else Options()
-    if run_in_background:   options.add_argument("--headless")
-    if disable_extensions:  options.add_argument("--disable-extensions")
+    
+    # Configure Chrome for headless/background operation
+    if run_in_background or running_in_actions:
+        options.add_argument("--headless=new")  # Use new headless mode
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--window-size=1920,1080")
+        
+    if disable_extensions:
+        options.add_argument("--disable-extensions")
+    
+    # Set downloads path
+    options.add_experimental_option("prefs", {
+        "download.default_directory": downloads_path,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": True
+    })
 
     print_lg("IF YOU HAVE MORE THAN 10 TABS OPENED, PLEASE CLOSE OR BOOKMARK THEM! Or it's highly likely that application will just open browser and not do anything!")
-    if safe_mode: 
+    if safe_mode or running_in_actions: 
         print_lg("SAFE MODE: Will login with a guest profile, browsing history will not be saved in the browser!")
     else:
         profile_dir = find_default_profile_directory()
         if profile_dir: options.add_argument(f"--user-data-dir={profile_dir}")
         else: print_lg("Default profile directory not found. Logging in with a guest profile, Web history will not be saved!")
+        
     if stealth_mode:
-        # try: 
-        #     driver = uc.Chrome(driver_executable_path="C:\\Program Files\\Google\\Chrome\\chromedriver-win64\\chromedriver.exe", options=options)
-        # except (FileNotFoundError, PermissionError) as e: 
-        #     print_lg("(Undetected Mode) Got '{}' when using pre-installed ChromeDriver.".format(type(e).__name__)) 
-            print_lg("Downloading Chrome Driver... This may take some time. Undetected mode requires download every run!")
-            driver = uc.Chrome(options=options)
-    else: driver = webdriver.Chrome(options=options) #, service=Service(executable_path="C:\\Program Files\\Google\\Chrome\\chromedriver-win64\\chromedriver.exe"))
+        print_lg("Downloading Chrome Driver... This may take some time. Undetected mode requires download every run!")
+        driver = uc.Chrome(options=options)
+    else: 
+        driver = webdriver.Chrome(options=options)
+        
     driver.maximize_window()
     wait = WebDriverWait(driver, 5)
     actions = ActionChains(driver)
@@ -60,4 +80,4 @@ except Exception as e:
     alert(msg, "Error in opening chrome")
     try: driver.quit()
     except NameError: exit()
-    
+
