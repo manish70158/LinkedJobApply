@@ -18,6 +18,7 @@ version:    24.12.29.12.30
 # >>>>>>>>>>> Environment Settings <<<<<<<<<<<
 import os
 import platform
+from pathlib import Path
 
 # Detect environment
 running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
@@ -26,17 +27,22 @@ is_linux = platform.system().lower() == 'linux'
 # Set absolute paths based on environment
 current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Set downloads path based on environment
 if running_in_actions:
-    downloads_path = '/home/runner/Downloads'
-    os.makedirs(downloads_path, exist_ok=True)
-    os.chmod(downloads_path, 0o777)
+    downloads_path = os.path.join(current_dir, 'downloads')
 elif is_linux:
     downloads_path = os.path.expanduser('~/Downloads')
 else:
     downloads_path = os.path.expanduser('~/Downloads')
 
-# Ensure downloads directory exists and has proper permissions
-os.makedirs(downloads_path, exist_ok=True)
+# Safely create downloads directory if it doesn't exist
+try:
+    Path(downloads_path).mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    print(f"Warning: Could not create downloads directory: {e}")
+    # Fall back to current directory if we can't create downloads directory
+    downloads_path = os.path.join(current_dir, 'downloads')
+    Path(downloads_path).mkdir(parents=True, exist_ok=True)
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
@@ -51,9 +57,6 @@ run_in_background = True if running_in_actions else False
 safe_mode = True if running_in_actions else False
 stealth_mode = False
 disable_extensions = True if running_in_actions else False
-
-# ...existing code...
-
 
 # >>>>>>>>>>> Global Settings <<<<<<<<<<<
 
