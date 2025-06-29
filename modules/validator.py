@@ -34,21 +34,14 @@ def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -
     '''
     Validates if the given variable is a string and meets the minimum length requirement.
     '''
-    # Debug logging for GitHub Actions
-    if running_in_actions and var_name in ['username', 'password']:
-        print_lg(f"Validating {var_name} in GitHub Actions environment")
-        print_lg(f"Variable type: {type(var)}")
-        print_lg(f"Variable length: {len(var) if var else 0}")
-        print_lg(f"Environment variable present: {'Yes' if var else 'No'}")
-
     if not isinstance(var, str):
         raise TypeError(f"Invalid input type for {var_name}. Expecting String!")
     
     # Special handling for credentials in GitHub Actions
     is_credential = var_name in ['username', 'password']
-    if is_credential and running_in_actions:
+    if is_credential and os.environ.get('GITHUB_ACTIONS') == 'true':
         if not var or len(var.strip()) == 0:
-            raise ValueError(f"Environment variable {var_name} is not set in GitHub Actions!")
+            raise ValueError(f"GitHub Actions: Required environment variable {var_name} is not set! Please set {var_name} in your repository secrets.")
         return True
     
     # Regular validation for other cases
@@ -183,9 +176,11 @@ def validate_secrets() -> None | ValueError | TypeError:
     __validation_file_path = "config/secrets.py"
 
     # Debug logging for GitHub Actions
-    if running_in_actions:
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
         print_lg("Validating secrets in GitHub Actions environment")
         from config.secrets import username, password
+        print_lg(f"Username variable type: {type(username)}")
+        print_lg(f"Username variable length: {len(username) if username else 0}")
         print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
         print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
 

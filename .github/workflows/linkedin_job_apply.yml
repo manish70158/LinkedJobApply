@@ -1,0 +1,120 @@
+name: LinkedIn Auto Job Applier
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  apply-to-jobs:
+    runs-on: ubuntu-latest
+    
+    # Ensure required secrets are available
+    if: ${{ secrets.LN_USERNAME != '' && secrets.LN_PASSWORD != '' }}
+    
+    env:
+      GITHUB_ACTIONS: "true"
+      CI: "true"
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.LN_USERNAME }}" ]; then
+            echo "Error: LN_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.LN_PASSWORD }}" ]; then
+            echo "Error: LN_PASSWORD secret is not set"
+            exit 1
+          fi
+          echo "Required secrets are properly configured"
+
+      # ... existing Chrome and Python setup steps ...
+
+      - name: Set up environment variables
+        run: |
+          # Export environment variables
+          echo "GITHUB_ACTIONS=true" >> $GITHUB_ENV
+          echo "CI=true" >> $GITHUB_ENV
+          echo "DISPLAY=:99.0" >> $GITHUB_ENV
+          echo "PYTHONPATH=${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply" >> $GITHUB_ENV
+          echo "DOWNLOADS_PATH=/home/runner/Downloads" >> $GITHUB_ENV
+
+      - name: Update secrets.py
+        env:
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+        run: |
+          echo "Updating secrets.py with credentials..."
+          python -c "
+          import os
+          import json
+          
+          # Verify environment variables
+          username = os.environ.get('LN_USERNAME')
+          password = os.environ.get('LN_PASSWORD')
+          
+          if not username or not password:
+              raise ValueError('LinkedIn credentials not found in environment')
+              
+          print(f'Environment variables verified:')
+          print(f'LN_USERNAME length: {len(username)}')
+          print(f'LN_PASSWORD length: {len(password)}')
+          
+          # Read and update secrets.py
+          with open('config/secrets.py', 'r') as f:
+              content = f.read()
+          
+          # Update the content with environment variables
+          updates = {
+              'username = os.environ.get(\"LN_USERNAME\", \"\")': f'username = os.environ.get(\"LN_USERNAME\", \"{username}\")',
+              'password = os.environ.get(\"LN_PASSWORD\", \"\")': f'password = os.environ.get(\"LN_PASSWORD\", \"{password}\")'
+          }
+          
+          for old, new in updates.items():
+              if old in content:
+                  content = content.replace(old, new)
+              else:
+                  content += f'\n{new}\n'
+          
+          with open('config/secrets.py', 'w') as f:
+              f.write(content)
+          
+          print('secrets.py updated successfully')
+          "
+
+      - name: Run LinkedIn Auto Job Applier
+        env:
+          DISPLAY: ":99.0"
+          GITHUB_ACTIONS: "true"
+          CI: "true"
+          PYTHONPATH: "${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply"
+          DOWNLOADS_PATH: "/home/runner/Downloads"
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Print environment info (without exposing secrets)
+          echo "Environment configuration:"
+          echo "Python path: $PYTHONPATH"
+          echo "Downloads path: $DOWNLOADS_PATH"
+          echo "Display: $DISPLAY"
+          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
+          echo "CI: $CI"
+          
+          # Verify environment
+          python -c "
+          import os
+          print('Environment verification:')
+          required_vars = ['LN_USERNAME', 'LN_PASSWORD', 'GITHUB_ACTIONS', 'CI']
+          for var in required_vars:
+              print(f'{var}: {"Set" if os.environ.get(var) else "Not set"}')
+          "
+          
+          # Run the bot
+          python runAiBot.py

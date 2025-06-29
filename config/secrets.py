@@ -20,22 +20,27 @@ version:    24.12.3.10.30
 import os
 from modules.helpers import print_lg
 
-# Try to get credentials from environment variables with debugging
-username = os.environ.get("LN_USERNAME")
-if username is None:
-    print_lg("WARNING: LN_USERNAME environment variable is not set!")
-    username = ""
+def get_env_var(var_name, required=False):
+    """Get environment variable with proper error handling"""
+    value = os.environ.get(var_name)
+    if value is None or value.strip() == "":
+        if required or os.environ.get('GITHUB_ACTIONS') == 'true':
+            print_lg(f"ERROR: {var_name} environment variable is not set!")
+        else:
+            print_lg(f"WARNING: {var_name} environment variable is not set!")
+    return value if value else ""
 
-password = os.environ.get("LN_PASSWORD")
-if password is None:
-    print_lg("WARNING: LN_PASSWORD environment variable is not set!")
-    password = ""
+# Get credentials with proper error handling
+username = get_env_var("LN_USERNAME", required=True)
+password = get_env_var("LN_PASSWORD", required=True)
 
 # Print debug info if running in GitHub Actions
 if os.environ.get('GITHUB_ACTIONS') == 'true':
     print_lg("Running in GitHub Actions environment")
     print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
     print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
+    print_lg(f"GITHUB_ACTIONS: {os.environ.get('GITHUB_ACTIONS')}")
+    print_lg(f"CI: {os.environ.get('CI')}")
 
 
 ## Artificial Intelligence (Beta Not-Recommended)
