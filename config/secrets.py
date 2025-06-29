@@ -16,9 +16,12 @@ version:    24.12.3.10.30
 ###################################################### CONFIGURE YOUR TOOLS HERE ######################################################
 
 
-# Login Credentials for LinkedIn (Optional)
-username = ""       # Enter your username in the quotes
-password = ""           # Enter your password in the quotes
+# Login Credentials for LinkedIn
+import os
+
+# Try to get credentials from environment variables first, fall back to empty strings
+username = os.environ.get("LN_USERNAME", "")  # Your LinkedIn username/email
+password = os.environ.get("LN_PASSWORD", "")  # Your LinkedIn password
 
 
 ## Artificial Intelligence (Beta Not-Recommended)
