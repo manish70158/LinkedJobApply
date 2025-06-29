@@ -23,13 +23,20 @@ import platform
 running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
 is_linux = platform.system().lower() == 'linux'
 
-# Set paths based on environment
+# Set absolute paths based on environment
+current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 if running_in_actions:
     downloads_path = '/home/runner/Downloads'
+    os.makedirs(downloads_path, exist_ok=True)
+    os.chmod(downloads_path, 0o777)
 elif is_linux:
     downloads_path = os.path.expanduser('~/Downloads')
 else:
     downloads_path = os.path.expanduser('~/Downloads')
+
+# Ensure downloads directory exists and has proper permissions
+os.makedirs(downloads_path, exist_ok=True)
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
@@ -40,11 +47,13 @@ close_tabs = True                   # Close tabs in headless mode
 follow_companies = False            
 
 # Run in background and headless mode for GitHub Actions
-run_in_background = False          # Set to False to see Chrome running
-run_non_stop = False               
-alternate_sortby = True             
-cycle_date_posted = True            
-stop_date_cycle_at_24hr = True      
+run_in_background = True if running_in_actions else False
+safe_mode = True if running_in_actions else False
+stealth_mode = False
+disable_extensions = True if running_in_actions else False
+
+# ...existing code...
+
 
 # >>>>>>>>>>> Global Settings <<<<<<<<<<<
 

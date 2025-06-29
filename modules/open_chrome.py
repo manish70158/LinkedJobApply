@@ -76,7 +76,7 @@ def get_chrome_version():
         # Try different commands for different platforms
         commands = [
             ['google-chrome', '--version'],  # Ubuntu/Linux
-            ['google-chrome-stable', '--version'],  # Alternative Linux name
+            ['/usr/bin/google-chrome', '--version'],  # Alternative Linux path
             ['chrome', '--version'],
             ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '--version'],
             ['reg', 'query', 'HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon', '/v', 'version']
@@ -88,6 +88,8 @@ def get_chrome_version():
                 # Handle Ubuntu-style version string
                 if 'Google Chrome' in version:
                     version = version.split('Google Chrome ')[1]
+                elif 'Google Chrome for Testing' in version:
+                    version = version.split('Google Chrome for Testing ')[1]
                 version = version.split()[0]  # Get first word in case of extra text
                 major_version = version.split('.')[0]
                 return major_version, version
@@ -121,49 +123,34 @@ try:
     os.makedirs(driver_dir, exist_ok=True)
     os.environ["PATH"] = f"{driver_dir}:{os.environ.get('PATH', '')}"
 
+    # Clean up any existing ChromeDriver files
+    for file in ['chromedriver', 'chromedriver.zip']:
+        file_path = os.path.join(driver_dir, file)
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except:
+            pass
+
     # Get Chrome version and compatible chromedriver
     chrome_major_version, chrome_full_version = get_chrome_version()
-    if chrome_major_version:
-        print_lg(f"Detected Chrome version: {chrome_full_version} (Major: {chrome_major_version})")
-        chromedriver_version, is_chrome_for_testing = get_compatible_chromedriver_version(chrome_major_version)
-        if chromedriver_version:
-            print_lg(f"Using {'Chrome for Testing' if is_chrome_for_testing else 'ChromeDriver'} version: {chromedriver_version}")
-            os.environ["CHROMEDRIVER_VERSION"] = chromedriver_version
-            
-            # Download and install correct chromedriver
-            try:
-                platform = get_platform()
-                if is_chrome_for_testing:
-                    driver_url = f"https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/{chromedriver_version}/{platform}/chromedriver-{platform}.zip"
-                else:
-                    driver_url = f"https://chromedriver.storage.googleapis.com/{chromedriver_version}/chromedriver_{platform}.zip"
-                
-                driver_zip = os.path.join(driver_dir, "chromedriver.zip")
-                print_lg(f"Downloading ChromeDriver from: {driver_url}")
-                r = requests.get(driver_url)
-                with open(driver_zip, 'wb') as f:
-                    f.write(r.content)
-                
-                # Extract with platform-specific paths
-                if platform == "linux64":
-                    os.system(f"cd {driver_dir} && unzip -o chromedriver.zip && chmod +x chromedriver")
-                else:
-                    os.system(f"cd {driver_dir} && unzip -o chromedriver.zip")
-                
-                if os.path.exists(driver_zip):
-                    os.remove(driver_zip)
-            except Exception as e:
-                print_lg(f"Error downloading ChromeDriver: {e}")
+    if not chrome_major_version:
+        raise Exception("Failed to detect Chrome version. Please ensure Chrome is installed.")
 
-    # Set up WebDriver with Chrome Profile
-    options = uc.ChromeOptions() if stealth_mode else Options()
+    print_lg(f"Detected Chrome version: {chrome_full_version} (Major: {chrome_major_version})")
     
-    # Configure Chrome for headless/background operation
+    # Download and install ChromeDriver using webdriver_manager
+    from webdriver_manager.chrome import ChromeDriverManager
+    from selenium.webdriver.chrome.service import Service
+
+    # Configure Chrome options
+    options = uc.ChromeOptions() if stealth_mode else webdriver.ChromeOptions()
+    
     if run_in_background or running_in_actions:
         options.add_argument("--headless=new")
         options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")  # Required for running Chrome as root in Ubuntu
-        options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
     
     if disable_extensions:
@@ -184,9 +171,10 @@ try:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
 
-    # Use guest profile in Ubuntu for stability
+    # Use guest profile in headless mode
     if safe_mode or running_in_actions:
         print_lg("SAFE MODE: Will login with a guest profile, browsing history will not be saved in the browser!")
+        options.add_argument("--guest")
     else:
         profile_dir = find_default_profile_directory()
         if profile_dir and not stealth_mode:
@@ -199,8 +187,8 @@ try:
         driver = uc.Chrome(options=options)
     else:
         print_lg("Using standard selenium webdriver...")
-        chromedriver_path = os.path.join(driver_dir, 'chromedriver')
-        service = Service(executable_path=chromedriver_path)
+        driver_path = ChromeDriverManager().install()
+        service = Service(executable_path=driver_path)
         driver = webdriver.Chrome(service=service, options=options)
 
     driver.maximize_window()
@@ -208,26 +196,14 @@ try:
     actions = ActionChains(driver)
 
 except Exception as e:
-    # Remove lock file on error
-    try:
-        os.remove(lock_file)
-    except:
-        pass
-    
     msg = """Seems like either... 
-
 1. Chrome is already running. 
 A. Close all Chrome windows and try again. 
-
 2. Google Chrome or Chromedriver is out dated. 
 A. Update browser and Chromedriver (You can run "setup.sh" in /setup folder for Ubuntu to update Chromedriver)! 
-
 3. If error occurred when using "stealth_mode", try reinstalling undetected-chromedriver. 
 A. Open a terminal and use commands "pip uninstall undetected-chromedriver" and "pip install undetected-chromedriver". 
-
 If issue persists, try Safe Mode. Set, safe_mode = True in config.py"""
-    if isinstance(e, TimeoutError):
-        msg = "Couldn't download Chrome-driver. Set stealth_mode = False in config!"
     print_lg(msg)
     critical_error_log("In Opening Chrome", e)
     try:
