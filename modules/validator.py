@@ -28,10 +28,24 @@ def check_boolean(var: bool, var_name: str) -> bool | ValueError:
     if var == True or var == False: return True
     raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects a Boolean input `True` or `False`, not "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to either `True` or `False` (case-sensitive, T and F must be CAPITAL/uppercase).\nExample: `{var_name} = True`\n\nNOTE: Do NOT surround Boolean values in quotes ("True")X !\n\n')
 
+from config.settings import running_in_actions
 def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
-    if not isinstance(var, str): raise TypeError(f'Invalid input for {var_name}. Expecting a String!')
-    if min_length > 0 and len(var) < min_length: raise ValueError(f'Invalid input for {var_name}. Expecting a String of length at least {min_length}!')
-    if len(options) > 0 and var not in options: raise ValueError(f'Invalid input for {var_name}. Expecting a value from {options}, not {var}!')
+    '''
+    Validates if the given variable is a string and meets the minimum length requirement.
+    '''
+    if not isinstance(var, str):
+        raise TypeError(f"Invalid input type for {var_name}. Expecting String!")
+    
+    # Skip length validation for credentials in GitHub Actions environment
+    is_credential = var_name in ['username', 'password']
+    if not running_in_actions or not is_credential:
+        if len(var) < min_length:
+            raise ValueError(f"Invalid input for {var_name}. Expecting a String of length at least {min_length}!")
+    elif is_credential and len(var.strip()) == 0:
+        raise ValueError(f"Missing required environment variable for {var_name}!")
+    
+    if options and var not in options:
+        raise ValueError(f"Invalid input for {var_name}. Value must be one of {options}!")
     return True
 
 def check_list(var: list, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
