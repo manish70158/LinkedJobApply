@@ -27,49 +27,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wget unzip xvfb
 
-          # Install Chrome using the new apt key method
-          sudo mkdir -p /etc/apt/keyrings
-          wget -q -O- https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          # Get latest Chrome and ChromeDriver versions
+          CHROME_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)
+          echo "Latest Chrome version: $CHROME_VERSION"
           
-          # Print Chrome version and get major version
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | awk -F'.' '{print $1}')
-          echo "Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
+          # Download and install Chrome for Testing
+          wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chrome-linux64.zip"
+          unzip -q chrome-linux64.zip
+          sudo mv chrome-linux64/chrome /usr/bin/google-chrome
+          sudo chmod +x /usr/bin/google-chrome
           
-          # Try to get matching chromedriver version, fall back through versions if needed
-          CHROMEDRIVER_VERSION=""
-          for VERSION in $CHROME_MAJOR_VERSION $(seq $((CHROME_MAJOR_VERSION-1)) $((CHROME_MAJOR_VERSION-5)) -1); do
-            echo "Trying chromedriver version $VERSION..."
-            RELEASE_URL="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION"
-            RESPONSE=$(curl -s "$RELEASE_URL")
-            if [[ ! $RESPONSE =~ "Error" ]]; then
-              CHROMEDRIVER_VERSION=$RESPONSE
-              echo "Found compatible chromedriver version: $CHROMEDRIVER_VERSION"
-              break
-            fi
-          done
-
-          # If still no version found, try the latest release
-          if [ -z "$CHROMEDRIVER_VERSION" ]; then
-            echo "Falling back to latest chromedriver version"
-            CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
-          fi
-          
-          if [ -z "$CHROMEDRIVER_VERSION" ]; then
-            echo "Failed to find a compatible chromedriver version"
-            exit 1
-          fi
-          
-          echo "Installing chromedriver version: $CHROMEDRIVER_VERSION"
-          
-          # Download and install chromedriver
-          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-          unzip -q chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chown root:root /usr/local/bin/chromedriver
+          # Download and install matching ChromeDriver
+          wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
+          unzip -q chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
           
           # Set up directories and permissions
@@ -78,15 +49,15 @@ jobs:
           mkdir -p logs/screenshots
           chmod -R 777 logs
           
-          # Set up virtual display with delay
+          # Set up virtual display
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3  # Give Xvfb more time to start
+          sleep 3
           
-          # Print versions and setup info
+          # Print versions for debugging
           echo "Chrome version:"
           google-chrome --version || true
-          echo "Chromedriver version:"
+          echo "ChromeDriver version:"
           chromedriver --version || true
           echo "Display: $DISPLAY"
           
@@ -146,7 +117,7 @@ jobs:
           echo "Downloads path: $DOWNLOADS_PATH"
           echo "Chrome version:"
           google-chrome --version
-          echo "Chromedriver version:"
+          echo "ChromeDriver version:"
           chromedriver --version
           python runAiBot.py
 
