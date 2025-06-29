@@ -18,6 +18,7 @@ import os
 import csv
 import re
 import sys
+from pathlib import Path
 
 # Check if we're running in a headless environment like GitHub Actions
 RUNNING_IN_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
@@ -834,7 +835,7 @@ def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str,
             fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Assumed Reason', 'Stack Trace', 'External Job link', 'Screenshot Name']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             if file.tell() == 0: writer.writeheader()
-            writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
+            writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':dateListed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
             file.close()
     except Exception as e:
         print_lg("Failed to update failed jobs list!", e)
@@ -1286,4 +1287,27 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import os
+    import sys
+    from pathlib import Path
+
+    def ensure_setup():
+        # Check if ChromeDriver exists and is executable
+        chrome_driver_exists = False
+        for path in os.environ["PATH"].split(os.pathsep):
+            chrome_driver = os.path.join(path, "chromedriver")
+            if os.path.exists(chrome_driver) and os.access(chrome_driver, os.X_OK):
+                chrome_driver_exists = True
+                break
+                
+        if not chrome_driver_exists:
+            print("ChromeDriver not found. Running setup script...")
+            setup_script = os.path.join(Path(__file__).parent, "setup", "setup.py")
+            if os.system(f"{sys.executable} {setup_script}") != 0:
+                print("Setup failed. Please run setup script manually.")
+                sys.exit(1)
+
+    # Run setup check before importing other modules
+    ensure_setup()
+
     main()

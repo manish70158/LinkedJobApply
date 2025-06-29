@@ -31,6 +31,7 @@ else:
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from modules.helpers import find_default_profile_directory, critical_error_log, print_lg
+from webdriver_manager.chrome import ChromeDriverManager
 
 def get_compatible_chromedriver_version(chrome_major_version):
     try:
@@ -233,4 +234,24 @@ If issue persists, try Safe Mode. Set, safe_mode = True in config.py"""
         driver.quit()
     except NameError:
         exit()
+
+def open_chrome():
+    options = webdriver.ChromeOptions()
+    if run_in_background:
+        options.add_argument('--headless')
+    if disable_extensions:
+        options.add_argument('--disable-extensions')
+    if safe_mode:
+        options.add_argument('--guest')
+    
+    # Set up Chrome service using webdriver-manager
+    service = Service(ChromeDriverManager().install())
+    
+    try:
+        driver = webdriver.Chrome(service=service, options=options)
+        print("Chrome started successfully")
+        return driver
+    except Exception as e:
+        print(f"Error starting Chrome: {str(e)}")
+        return None
 

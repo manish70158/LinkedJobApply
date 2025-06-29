@@ -57,10 +57,10 @@ logs_folder_path = "logs/"
 click_gap = 1                      # Wait time between clicks in seconds
 
 # Chrome configuration
-disable_extensions = True          # Better performance
-safe_mode = True                  # Use guest profile for stability
-smooth_scroll = False             # Better performance
-keep_screen_awake = False         # Prevent sleep during long runs
+disable_extensions = False          # Better performance
+safe_mode = False                  # Use guest profile for stability
+smooth_scroll = True              # Better performance
+keep_screen_awake = True         # Prevent sleep during long runs
 stealth_mode = False             # Disable stealth mode for stability
 
 # AI-related settings
