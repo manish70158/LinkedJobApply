@@ -30,7 +30,7 @@ jobs:
         run: |
           # Remove any existing Chrome installations
           sudo apt-get remove -y google-chrome-stable
-          sudo rm -rf /etc/apt/sources.list.d/google-chrome*.list /usr/local/bin/chromedriver ~/.local/bin/chromedriver
+          sudo rm -rf /etc/apt/sources.list.d/google-chrome*.list /usr/local/bin/chromedriver
 
           # Install Chrome
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
@@ -74,8 +74,10 @@ jobs:
           echo "CHROMEDRIVER_VERSION=$CHROMEDRIVER_VERSION" >> $GITHUB_ENV
           echo "IS_CHROME_FOR_TESTING=$IS_CHROME_FOR_TESTING" >> $GITHUB_ENV
           
-          # Create directories for ChromeDriver
-          sudo mkdir -p /usr/local/bin ~/.local/bin
+          # Create directories for ChromeDriver with proper permissions
+          sudo mkdir -p /usr/local/bin
+          sudo mkdir -p /home/runner/.local/bin
+          sudo chown -R runner:runner /home/runner/.local
           
           # Download and install ChromeDriver
           TEMP_DIR=$(mktemp -d)
@@ -85,25 +87,37 @@ jobs:
             echo "Downloading Chrome for Testing ChromeDriver..."
             wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
             unzip -o chromedriver-linux64.zip
+            
+            # Install in system location
             sudo cp -f chromedriver-linux64/chromedriver /usr/local/bin/
-            cp -f chromedriver-linux64/chromedriver ~/.local/bin/
+            sudo chmod +x /usr/local/bin/chromedriver
+            
+            # Install in user location with proper ownership
+            cp -f chromedriver-linux64/chromedriver /home/runner/.local/bin/
+            chmod +x /home/runner/.local/bin/chromedriver
           else
             echo "Downloading legacy ChromeDriver..."
             wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
             unzip -o chromedriver_linux64.zip
+            
+            # Install in system location
             sudo cp -f chromedriver /usr/local/bin/
-            cp -f chromedriver ~/.local/bin/
+            sudo chmod +x /usr/local/bin/chromedriver
+            
+            # Install in user location with proper ownership
+            cp -f chromedriver /home/runner/.local/bin/
+            chmod +x /home/runner/.local/bin/chromedriver
           fi
-          
-          # Set permissions
-          sudo chmod +x /usr/local/bin/chromedriver
-          chmod +x ~/.local/bin/chromedriver
           
           # Clean up
           cd -
           rm -rf "$TEMP_DIR"
           
-          # Verify installation
+          # Verify installation and permissions
+          echo "ChromeDriver system installation:"
+          ls -l /usr/local/bin/chromedriver
+          echo "ChromeDriver user installation:"
+          ls -l /home/runner/.local/bin/chromedriver
           echo "ChromeDriver version:"
           chromedriver --version
 
