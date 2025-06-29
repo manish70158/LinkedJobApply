@@ -10,62 +10,54 @@ fi
 apt-get update
 apt-get install -y wget unzip xvfb python3-pip python3-venv
 
-# Install Chrome if not present
-if ! command -v google-chrome &> /dev/null; then
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-    apt-get update
-    apt-get install -y google-chrome-stable
-fi
+# Clean up any existing Chrome/ChromeDriver installations
+sudo rm -rf /usr/bin/google-chrome /usr/local/bin/chromedriver chrome-linux64* chromedriver-linux64*
 
-# Get Chrome version and download matching ChromeDriver
-CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | awk -F'.' '{print $1}')
-echo "Chrome version detected: $CHROME_VERSION"
+# Get latest Chrome and ChromeDriver versions
+CHROME_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)
+echo "Latest Chrome version: $CHROME_VERSION"
 
-# Try to get matching ChromeDriver version
-CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHROME_VERSION")
-
-if [ -z "$CHROMEDRIVER_VERSION" ]; then
-    echo "No exact match found for Chrome version $CHROME_VERSION, trying previous version..."
-    CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$(($CHROME_VERSION-1))")
-fi
-
-if [ -z "$CHROMEDRIVER_VERSION" ]; then
-    echo "Failed to find compatible ChromeDriver version"
-    exit 1
-fi
-
-echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
-
-# Clean up any existing ChromeDriver files and ensure directories are empty
-sudo rm -rf /usr/local/bin/chromedriver chromedriver-linux64* /tmp/chromedriver*
-
-# Create a clean temporary directory
+# Create temporary directory for downloads
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR" || exit 1
 
-# Download ChromeDriver to temp directory
-wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
+# Download and install Chrome for Testing
+wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chrome-linux64.zip"
+yes | unzip -o chrome-linux64.zip
+sudo cp -f chrome-linux64/chrome /usr/bin/google-chrome
+sudo chmod +x /usr/bin/google-chrome
 
-# Extract without prompting
+# Download and install matching ChromeDriver
+wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
 yes | unzip -o chromedriver-linux64.zip
-
-# Install ChromeDriver
 sudo cp -f chromedriver-linux64/chromedriver /usr/local/bin/
 sudo chmod +x /usr/local/bin/chromedriver
 
-# Clean up temp directory
+# Clean up temporary directory
 cd - || exit 1
 rm -rf "$TEMP_DIR"
 
-# Create required directories with proper permissions
+# Set up directories and permissions
 mkdir -p ~/Downloads
 chmod 777 ~/Downloads
+mkdir -p logs/screenshots
+chmod -R 777 logs
+
+# Set up virtual display for headless mode
+export DISPLAY=:99
+Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+sleep 3
+
+# Print versions for debugging
+echo "Chrome version:"
+google-chrome --version || true
+echo "ChromeDriver version:"
+chromedriver --version || true
 
 # Set up Python environment
 python3 -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 echo "Setup complete! The environment is ready to run the LinkedIn Auto Job Applier."
