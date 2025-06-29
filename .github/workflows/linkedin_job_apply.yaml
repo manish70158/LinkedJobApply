@@ -21,52 +21,61 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
           
-      - name: Install Chrome
+      - name: Install Chrome and dependencies
         run: |
-          # Remove any existing Chrome installations
-          sudo apt-get remove google-chrome-stable
-          sudo apt-get purge google-chrome-stable
-          sudo rm -rf /usr/bin/google-chrome*
-          sudo rm -rf /usr/bin/chromedriver*
-          
-          # Create required directories
-          sudo mkdir -p /etc/apt/sources.list.d
+          # Install required packages
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb
+
+          # Install Chrome and remove apt key warning
           sudo mkdir -p /etc/apt/keyrings
-          
-          # Install latest Chrome using the new apt key method
-          wget -q -O- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          wget -q -O- https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
           
-          # Get Chrome version and install matching chromedriver
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | awk -F'.' '{print $1}')
-          wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}" -O chromedriver_version
-          CHROMEDRIVER_VERSION=$(cat chromedriver_version)
-          wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/bin/chromedriver
-          sudo chown root:root /usr/bin/chromedriver
-          sudo chmod +x /usr/bin/chromedriver
+          # Print Chrome version and set up chromedriver
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+          CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | awk -F'.' '{print $1}')
+          echo "Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
           
-          # Create required directories with proper permissions
+          # Get matching chromedriver version with fallback
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION")
+          if [ -z "$CHROMEDRIVER_VERSION" ]; then
+            echo "Falling back to latest chromedriver version"
+            CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+          fi
+          echo "Installing chromedriver version: $CHROMEDRIVER_VERSION"
+          
+          # Download and install chromedriver
+          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          unzip -q chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chown root:root /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          
+          # Set up directories and permissions
           sudo mkdir -p /home/runner/Downloads
           sudo chmod 777 /home/runner/Downloads
+          mkdir -p logs/screenshots
+          chmod -R 777 logs
           
-          # Setup virtual display
-          sudo apt-get install -y xvfb
+          # Set up virtual display with delay
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3  # Give Xvfb more time to start
           
-          # Print versions for debugging
-          google-chrome --version
-          chromedriver --version
+          # Print versions and setup info
+          echo "Chrome version:"
+          google-chrome --version || true
+          echo "Chromedriver version:"
+          chromedriver --version || true
+          echo "Display: $DISPLAY"
           
       - name: Install Python packages
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
-          python -m pip install openai
           
       - name: Configure for headless mode
         run: |
@@ -90,7 +99,6 @@ jobs:
         run: |
           python -c "
           import os
-          import re
           
           # Read current content
           with open('config/secrets.py', 'r') as f:
@@ -118,7 +126,9 @@ jobs:
           # Print debugging info
           echo "Python path: $PYTHONPATH"
           echo "Downloads path: $DOWNLOADS_PATH"
+          echo "Chrome version:"
           google-chrome --version
+          echo "Chromedriver version:"
           chromedriver --version
           python runAiBot.py
 
