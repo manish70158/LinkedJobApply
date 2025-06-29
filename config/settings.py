@@ -66,7 +66,7 @@ cycle_date_posted = True
 stop_date_cycle_at_24hr = True
 
 # Click timing (increased for stability on Linux)
-click_gap = 1.5 if is_linux else 1
+click_gap = 2 if is_linux else 1
 
 # >>>>>>>>>>> Directory Settings <<<<<<<<<<<
 
