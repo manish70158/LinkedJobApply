@@ -37,10 +37,13 @@ fi
 
 echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
 
+# Remove existing ChromeDriver directory if it exists
+rm -rf chromedriver-linux64
+
 # Download and install ChromeDriver
 wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
-unzip -q chromedriver-linux64.zip
-mv chromedriver-linux64/chromedriver /usr/local/bin/
+unzip -o -q chromedriver-linux64.zip # Added -o flag to force overwrite
+mv -f chromedriver-linux64/chromedriver /usr/local/bin/ # Added -f flag to force overwrite
 chmod +x /usr/local/bin/chromedriver
 rm -rf chromedriver-linux64.zip chromedriver-linux64
 
