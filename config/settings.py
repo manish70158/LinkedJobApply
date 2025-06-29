@@ -18,33 +18,37 @@ version:    24.12.29.12.30
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
 # Keep the External Application tabs open?
-close_tabs = False                  # True or False, Note: True or False are case-sensitive
-'''
-Note: RECOMMENDED TO LEAVE IT AS `True`, if you set it `False`, be sure to CLOSE ALL TABS BEFORE CLOSING THE BROWSER!!!
-'''
+close_tabs = True                   # Close tabs in headless mode
 
 # Follow easy applied companies
-follow_companies = False            # True or False, Note: True or False are case-sensitive
+follow_companies = False            
 
-## Upcoming features (In Development)
-# # Send connection requests to HR's 
-# connect_hr = True                  # True or False, Note: True or False are case-sensitive
+# Run in background and headless mode for GitHub Actions
+run_in_background = True            # Must be True for GitHub Actions
+run_non_stop = False               
+alternate_sortby = True             
+cycle_date_posted = True            
+stop_date_cycle_at_24hr = True      
 
-# # What message do you want to send during connection request? (Max. 200 Characters)
-# connect_request_message = ""       # Leave Empty to send connection request without personalized invitation (recommended to leave it empty, since you only get 10 per month without LinkedIn Premium*)
+# >>>>>>>>>>> Global Settings <<<<<<<<<<<
 
-# Do you want the program to run continuously until you stop it? (Beta)
-run_non_stop = False                # True or False, Note: True or False are case-sensitive
-'''
-Note: Will be treated as False if `run_in_background = True`
-'''
-alternate_sortby = True             # True or False, Note: True or False are case-sensitive
-cycle_date_posted = True            # True or False, Note: True or False are case-sensitive
-stop_date_cycle_at_24hr = True      # True or False, Note: True or False are case-sensitive
+# Directory and file paths
+file_name = "all excels/all_applied_applications_history.csv"
+failed_file_name = "all excels/all_failed_applications_history.csv"
+logs_folder_path = "logs/"
 
+# Minimal delay for stability
+click_gap = 1                       
 
+# Chrome configuration for headless operation
+disable_extensions = True           # Better performance in headless mode
+safe_mode = True                   # Use guest profile for stability
+smooth_scroll = False              # Better performance
+keep_screen_awake = False          # Not needed in headless mode
+stealth_mode = False               # More stable without stealth mode in Actions
 
-
+# AI-related settings
+showAiErrorAlerts = False           # Disable alerts in headless mode
 
 # >>>>>>>>>>> RESUME GENERATOR (Experimental & In Development) <<<<<<<<<<<
 

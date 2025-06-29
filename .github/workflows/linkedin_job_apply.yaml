@@ -2,93 +2,87 @@ name: LinkedIn Auto Job Applier
 
 on:
   schedule:
-    # Run every hour
-    - cron: '0 * * * *'
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
   # Allows manual triggering from GitHub Actions tab
   workflow_dispatch:
 
 jobs:
-  job_application:
-    # Change from ubuntu-latest to self-hosted runner
+  apply-to-jobs:
     runs-on: ubuntu-latest 
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v3
 
-      # We can skip Python setup if already installed on your self-hosted runner
       - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          
+      - name: Install Chrome and dependencies
         run: |
-          # Check if Python is already installed
-          python3 --version || echo "Python needs to be installed manually"
-
-      - name: Install dependencies from requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb
+          
+          # Install Chrome
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          
+          # Setup display for headless mode
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          
+      - name: Install Python packages
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
-
-      # No need for special Chrome setup on your machine if Chrome is already installed
-      # No need for xvfb on macOS as it has native GUI
-
-      - name: Create settings override
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          
+      - name: Configure for headless mode
         run: |
-          # Create settings override to bypass validation
-          echo "# Auto-generated settings for headless mode" >> config/settings.py
-          echo "import os" >> config/settings.py
-          echo "running_in_actions = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'" >> config/settings.py
-          echo "if running_in_actions:" >> config/settings.py
-          echo "    run_in_background = True" >> config/settings.py
-          echo "    skip_validation = True" >> config/settings.py
-          echo "    pause_at_failed_question = False" >> config/settings.py
-          echo "    pause_before_submit = False" >> config/settings.py
-
-      - name: Prepare config files
-        run: |
-          # Update configuration files using a more robust Python script
-          python3 -c "
+          # Update settings.py for headless mode
+          cat << EOF >> config/settings.py
+          
+          # Headless mode configuration
           import os
-          import re
-
-          # Read the secrets.py file
-          with open('config/secrets.py', 'r') as f:
-              content = f.read()
-
-          # Find and replace any gemini_api_key line with our environment variable version
-          # This is more robust than using sed with exact string matching
-          pattern = re.compile(r'gemini_api_key\s*=.*')
-          content = pattern.sub('gemini_api_key = os.environ.get(\"GEMINI_API_KEY\", \"\")', content)
+          running_in_actions = True
+          run_in_background = True
+          safe_mode = True
+          disable_extensions = True
+          smooth_scroll = False
+          keep_screen_awake = False
+          stealth_mode = False
+          showAiErrorAlerts = False
+          EOF
           
-          # Write the modified content back
-          with open('config/secrets.py', 'w') as f:
-              f.write(content)
+      - name: Update credentials
+        run: |
+          python -c "
+          import os
           
-          # Make sure username and password are set to read from environment variables
+          # Read current content
           with open('config/secrets.py', 'r') as f:
               content = f.read()
               
-          # Check if we need to modify username and password
+          # Add environment variables for credentials
           if 'username = os.environ.get(\"LN_USERNAME\"' not in content:
               with open('config/secrets.py', 'a') as f:
                   f.write('\n# Auto-inserted by GitHub Actions\n')
                   f.write('username = os.environ.get(\"LN_USERNAME\", \"\")\n')
                   f.write('password = os.environ.get(\"LN_PASSWORD\", \"\")\n')
-          
-          print('Configuration files updated successfully')
           "
           
-          # Print a confirmation that we're running in headless mode
-          echo "Running in GitHub Actions headless mode"
-
       - name: Run LinkedIn Auto Job Applier
         env:
+          DISPLAY: ":99.0"
           GITHUB_ACTIONS: "true"
-          CI: "true" 
+          CI: "true"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LN_USERNAME: ${{ secrets.LN_USERNAME }}
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
         run: |
-          # Run the application
-          python3 runAiBot.py
+          # Print Chrome version for debugging
+          google-chrome --version
+          python runAiBot.py
 
