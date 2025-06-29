@@ -20,25 +20,25 @@ version:    24.12.3.10.30
 import os
 from modules.helpers import print_lg
 
-def get_env_var(var_name, required=False):
-    """Get environment variable with proper error handling"""
+def get_required_env_var(var_name: str) -> str:
+    """Get an environment variable that is required in GitHub Actions"""
     value = os.environ.get(var_name)
-    if value is None or value.strip() == "":
-        if required or os.environ.get('GITHUB_ACTIONS') == 'true':
-            print_lg(f"ERROR: {var_name} environment variable is not set!")
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        if not value or len(value.strip()) == 0:
+            print_lg(f"ERROR: Required environment variable {var_name} is not set in GitHub Actions!")
         else:
-            print_lg(f"WARNING: {var_name} environment variable is not set!")
+            print_lg(f"Environment variable {var_name} is properly set")
     return value if value else ""
 
 # Get credentials with proper error handling
-username = get_env_var("LN_USERNAME", required=True)
-password = get_env_var("LN_PASSWORD", required=True)
+username = get_required_env_var("LN_USERNAME")
+password = get_required_env_var("LN_PASSWORD")
 
-# Print debug info if running in GitHub Actions
+# Debug output for GitHub Actions
 if os.environ.get('GITHUB_ACTIONS') == 'true':
     print_lg("Running in GitHub Actions environment")
-    print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
-    print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
+    print_lg(f"Username length: {len(username)}")
+    print_lg(f"Password length: {len(password)}")
     print_lg(f"GITHUB_ACTIONS: {os.environ.get('GITHUB_ACTIONS')}")
     print_lg(f"CI: {os.environ.get('CI')}")
 

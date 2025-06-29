@@ -41,10 +41,11 @@ def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -
     is_credential = var_name in ['username', 'password']
     if is_credential and os.environ.get('GITHUB_ACTIONS') == 'true':
         if not var or len(var.strip()) == 0:
-            raise ValueError(f"GitHub Actions: Required environment variable {var_name} is not set! Please set {var_name} in your repository secrets.")
+            raise ValueError(f"GitHub Actions: Required environment variable {var_name} is not set! Please check your repository secrets.")
+        # Skip length validation for credentials in GitHub Actions
         return True
     
-    # Regular validation for other cases
+    # Regular validation for non-GitHub Actions or non-credential strings
     if len(var) < min_length:
         raise ValueError(f"Invalid input for {var_name}. Expecting a String of length at least {min_length}!")
     
@@ -178,12 +179,12 @@ def validate_secrets() -> None | ValueError | TypeError:
     # Debug logging for GitHub Actions
     if os.environ.get('GITHUB_ACTIONS') == 'true':
         print_lg("Validating secrets in GitHub Actions environment")
-        from config.secrets import username, password
-        print_lg(f"Username variable type: {type(username)}")
-        print_lg(f"Username variable length: {len(username) if username else 0}")
-        print_lg(f"Username environment variable: {'Set' if username else 'Not set'}")
-        print_lg(f"Password environment variable: {'Set' if password else 'Not set'}")
+        print_lg(f"GITHUB_ACTIONS: {os.environ.get('GITHUB_ACTIONS')}")
+        print_lg(f"CI: {os.environ.get('CI')}")
+        print_lg(f"LN_USERNAME present: {'Yes' if os.environ.get('LN_USERNAME') else 'No'}")
+        print_lg(f"LN_PASSWORD present: {'Yes' if os.environ.get('LN_PASSWORD') else 'No'}")
 
+    # Validate credentials
     check_string(username, "username", min_length=5)
     check_string(password, "password", min_length=5)
 

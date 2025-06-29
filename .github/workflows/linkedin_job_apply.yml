@@ -8,11 +8,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  apply-to-jobs:
+  verify-secrets:
     runs-on: ubuntu-latest
-    
-    # Ensure required secrets are available
-    if: ${{ secrets.LN_USERNAME != '' && secrets.LN_PASSWORD != '' }}
+    steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.LN_USERNAME }}" ] || [ -z "${{ secrets.LN_PASSWORD }}" ]; then
+            echo "Error: Required secrets LN_USERNAME and/or LN_PASSWORD are not set"
+            exit 1
+          fi
+          echo "Required secrets are properly configured"
+
+  apply-to-jobs:
+    needs: verify-secrets
+    runs-on: ubuntu-latest
     
     env:
       GITHUB_ACTIONS: "true"
@@ -22,71 +31,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Verify Secrets
-        run: |
-          if [ -z "${{ secrets.LN_USERNAME }}" ]; then
-            echo "Error: LN_USERNAME secret is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.LN_PASSWORD }}" ]; then
-            echo "Error: LN_PASSWORD secret is not set"
-            exit 1
-          fi
-          echo "Required secrets are properly configured"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
       # ... existing Chrome and Python setup steps ...
 
       - name: Set up environment variables
         run: |
-          # Export environment variables
+          echo "Setting up environment variables..."
           echo "GITHUB_ACTIONS=true" >> $GITHUB_ENV
           echo "CI=true" >> $GITHUB_ENV
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
-          echo "PYTHONPATH=${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply" >> $GITHUB_ENV
-          echo "DOWNLOADS_PATH=/home/runner/Downloads" >> $GITHUB_ENV
-
-      - name: Update secrets.py
-        env:
-          LN_USERNAME: ${{ secrets.LN_USERNAME }}
-          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
-        run: |
-          echo "Updating secrets.py with credentials..."
-          python -c "
-          import os
-          import json
+          echo "LN_USERNAME=${{ secrets.LN_USERNAME }}" >> $GITHUB_ENV
+          echo "LN_PASSWORD=${{ secrets.LN_PASSWORD }}" >> $GITHUB_ENV
           
-          # Verify environment variables
-          username = os.environ.get('LN_USERNAME')
-          password = os.environ.get('LN_PASSWORD')
+          # Verify environment variables are set
+          if [ -z "${LN_USERNAME}" ]; then
+            echo "Error: LN_USERNAME is not set"
+            exit 1
+          fi
+          if [ -z "${LN_PASSWORD}" ]; then
+            echo "Error: LN_PASSWORD is not set"
+            exit 1
+          fi
           
-          if not username or not password:
-              raise ValueError('LinkedIn credentials not found in environment')
-              
-          print(f'Environment variables verified:')
-          print(f'LN_USERNAME length: {len(username)}')
-          print(f'LN_PASSWORD length: {len(password)}')
-          
-          # Read and update secrets.py
-          with open('config/secrets.py', 'r') as f:
-              content = f.read()
-          
-          # Update the content with environment variables
-          updates = {
-              'username = os.environ.get(\"LN_USERNAME\", \"\")': f'username = os.environ.get(\"LN_USERNAME\", \"{username}\")',
-              'password = os.environ.get(\"LN_PASSWORD\", \"\")': f'password = os.environ.get(\"LN_PASSWORD\", \"{password}\")'
-          }
-          
-          for old, new in updates.items():
-              if old in content:
-                  content = content.replace(old, new)
-              else:
-                  content += f'\n{new}\n'
-          
-          with open('config/secrets.py', 'w') as f:
-              f.write(content)
-          
-          print('secrets.py updated successfully')
-          "
+          echo "Environment variables configured successfully"
 
       - name: Run LinkedIn Auto Job Applier
         env:
@@ -106,15 +78,8 @@ jobs:
           echo "Display: $DISPLAY"
           echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
           echo "CI: $CI"
-          
-          # Verify environment
-          python -c "
-          import os
-          print('Environment verification:')
-          required_vars = ['LN_USERNAME', 'LN_PASSWORD', 'GITHUB_ACTIONS', 'CI']
-          for var in required_vars:
-              print(f'{var}: {"Set" if os.environ.get(var) else "Not set"}')
-          "
+          echo "LN_USERNAME is set: ${{ secrets.LN_USERNAME != '' }}"
+          echo "LN_PASSWORD is set: ${{ secrets.LN_PASSWORD != '' }}"
           
           # Run the bot
           python runAiBot.py
