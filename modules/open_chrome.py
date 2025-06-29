@@ -80,31 +80,33 @@ def get_compatible_chromedriver_version(chrome_major_version):
     try:
         print_lg(f"Finding ChromeDriver version for Chrome {chrome_major_version}")
         
-        # Try regular ChromeDriver first (more stable)
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found ChromeDriver version: {version}")
-            return version, False
-            
-        # Fall back to Chrome for Testing
-        url = f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found Chrome for Testing version: {version}")
-            return version, True
-            
-        # Try previous version if exact match fails
+        # Always try exact version first from both sources
+        sources = [
+            (f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_major_version}", False),
+            (f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{chrome_major_version}", True)
+        ]
+        
+        for url, is_testing in sources:
+            response = requests.get(url)
+            if response.status_code == 200 and not "Error" in response.text:
+                version = response.text.strip()
+                print_lg(f"Found {'Chrome for Testing' if is_testing else 'ChromeDriver'} version: {version}")
+                return version, is_testing
+        
+        # If no exact match, try the previous version
         prev_version = str(int(chrome_major_version) - 1)
         print_lg(f"No exact match found, trying Chrome version {prev_version}")
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}"
-        response = requests.get(url)
-        if response.status_code == 200 and not "Error" in response.text:
-            version = response.text.strip()
-            print_lg(f"Found ChromeDriver version for previous version: {version}")
-            return version, False
+        
+        # Try previous version from both sources
+        for url, is_testing in [
+            (f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{prev_version}", False),
+            (f"https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_{prev_version}", True)
+        ]:
+            response = requests.get(url)
+            if response.status_code == 200 and not "Error" in response.text:
+                version = response.text.strip()
+                print_lg(f"Found {'Chrome for Testing' if is_testing else 'ChromeDriver'} version for previous version: {version}")
+                return version, is_testing
         
         print_lg("No compatible ChromeDriver version found")
         return None, False
@@ -147,7 +149,6 @@ try:
     except:
         pass
 
-    # Download and extract ChromeDriver
     print_lg(f"Downloading ChromeDriver from: {driver_url}")
     r = requests.get(driver_url)
     if r.status_code != 200:
@@ -160,19 +161,29 @@ try:
     extract_dir = os.path.join(driver_dir, 'temp_extract')
     os.makedirs(extract_dir, exist_ok=True)
     
-    os.system(f"cd {extract_dir} && unzip -o {driver_zip}")
+    # Use proper unzip command with error handling
+    unzip_result = os.system(f"cd {extract_dir} && unzip -o {driver_zip}")
+    if unzip_result != 0:
+        raise Exception("Failed to extract ChromeDriver")
+        
     if is_chrome_for_testing:
-        os.system(f"cp -f {extract_dir}/chromedriver-{platform}/chromedriver {chromedriver_path}")
+        copy_result = os.system(f"cp -f {extract_dir}/chromedriver-{platform}/chromedriver {chromedriver_path}")
     else:
-        os.system(f"cp -f {extract_dir}/chromedriver {chromedriver_path}")
-    os.system(f"chmod +x {chromedriver_path}")
+        copy_result = os.system(f"cp -f {extract_dir}/chromedriver {chromedriver_path}")
+        
+    if copy_result != 0:
+        raise Exception("Failed to copy ChromeDriver to final location")
+        
+    chmod_result = os.system(f"chmod +x {chromedriver_path}")
+    if chmod_result != 0:
+        raise Exception("Failed to set ChromeDriver permissions")
     
     # Clean up temporary files
     try:
         os.system(f"rm -rf {extract_dir}")
         os.remove(driver_zip)
-    except:
-        pass
+    except Exception as e:
+        print_lg(f"Warning: Failed to clean up temporary files: {e}")
 
     # Configure Chrome options for headless/background operation
     options = uc.ChromeOptions() if stealth_mode else webdriver.ChromeOptions()
