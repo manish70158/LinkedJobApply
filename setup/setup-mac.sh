@@ -48,8 +48,9 @@ fi
 mkdir -p ~/Downloads
 chmod 755 ~/Downloads
 
+source .venv/bin/activate
 # Set up Python environment and install requirements
 python3 -m pip install --upgrade pip
-python3 -m pip install -r ../requirements.txt
+python3 -m pip install -r requirements.txt
 
 echo "Setup complete! The environment is ready to run the LinkedIn Auto Job Applier."

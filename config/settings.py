@@ -41,18 +41,18 @@ os.makedirs(downloads_path, exist_ok=True)
 
 # >>>>>>>>>>> LinkedIn Settings <<<<<<<<<<<
 
-# Run in background and headless mode for Ubuntu
-run_in_background = False  # Set to False for macOS
-safe_mode = True          # Enable safe mode to handle Chrome initialization issues
+# Run in background and headless mode
+run_in_background = False  # Keep False for macOS
+safe_mode = True          # Enable safe mode to better compatibility
 
 # Run continuously setting
-run_non_stop = False               # Set to False for GitHub Actions compatibility
+run_non_stop = False      # Keep False for GitHub Actions compatibility
 
 # Browser settings
-stealth_mode = False              # Disable stealth mode for better compatibility
-disable_extensions = True         # Better performance
-smooth_scroll = False            # Better performance
-keep_screen_awake = True         # Keep system active during long runs
+stealth_mode = False      # Disable stealth mode for better compatibility
+disable_extensions = True  # Better performance
+smooth_scroll = False     # Better performance
+keep_screen_awake = True  # Keep system active during long runs
 
 # Close external application tabs
 close_tabs = True
