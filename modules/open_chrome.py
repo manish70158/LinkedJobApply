@@ -254,23 +254,54 @@ If issue persists, try Safe Mode. Set, safe_mode = True in config.py"""
         exit()
 
 def open_chrome():
+    """Initialize Chrome with optimal settings for Ubuntu"""
     try:
+        # Set up Chrome options
         options = webdriver.ChromeOptions()
-        if run_in_background or running_in_actions:
+        
+        # Basic options for stability on Ubuntu
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-software-rasterizer')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        
+        if run_in_background or running_in_actions or is_linux:
             options.add_argument("--headless=new")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--window-size=1920,1080")
+            options.add_argument("--start-maximized")
+        
         if disable_extensions:
             options.add_argument('--disable-extensions')
+            
         if safe_mode:
             options.add_argument('--guest')
-
-        # Set up ChromeDriver using webdriver_manager with cache_valid_range
-        service = Service(ChromeDriverManager().install())
+            
+        # Set up downloads directory and other preferences
+        prefs = {
+            "download.default_directory": downloads_path,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True,
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False
+        }
+        options.add_experimental_option("prefs", prefs)
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        
+        # Use ChromeDriverManager for better compatibility
+        service = Service(ChromeDriverManager(cache_valid_range=1).install())
         driver = webdriver.Chrome(service=service, options=options)
+        
+        # Maximize window and set page load timeout
         driver.maximize_window()
+        driver.set_page_load_timeout(30)
+        
+        # Set up WebDriverWait with longer timeout for Ubuntu
+        wait = WebDriverWait(driver, 10)
+        actions = ActionChains(driver)
+        
         print_lg("Chrome started successfully")
         return driver
     except Exception as e:

@@ -165,3 +165,37 @@ def text_input(actions: ActionChains, textInputEle: WebElement | bool, value: st
         actions.send_keys(Keys.ENTER).perform()
     else:
         print_lg(f'{textFieldName} input was not given!')
+
+def do_login(driver, username, password):
+    """Handle login with proper delays"""
+    try:
+        # Start fresh
+        driver.delete_all_cookies()
+        driver.get("https://www.linkedin.com/login")
+        sleep(3)
+        
+        # Handle login form with explicit waits
+        username_field = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "username"))
+        )
+        username_field.clear()
+        username_field.send_keys(username)
+        sleep(1)
+        
+        password_field = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.ID, "password"))
+        )
+        password_field.clear()
+        password_field.send_keys(password)
+        sleep(1)
+        
+        submit = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.XPATH, '//button[@type="submit"]'))
+        )
+        submit.click()
+        sleep(5)
+        
+        return True
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return False
