@@ -2,39 +2,14 @@ name: LinkedIn Auto Job Applier
 
 on:
   schedule:
+    # Run every 6 hours
     - cron: '0 */6 * * *'
+  # Allows manual triggering
   workflow_dispatch:
 
 jobs:
-  verify-secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check required secrets
-        env:
-          LN_USERNAME: ${{ secrets.LN_USERNAME }}
-          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
-        run: |
-          if [[ -z "$LN_USERNAME" ]]; then
-            echo "Error: LN_USERNAME secret is not set"
-            echo "Please set LN_USERNAME in your repository secrets:"
-            echo "1. Go to Settings > Secrets and variables > Actions"
-            echo "2. Click 'New repository secret'"
-            echo "3. Add LN_USERNAME with your LinkedIn email/username"
-            exit 1
-          fi
-          if [[ -z "$LN_PASSWORD" ]]; then
-            echo "Error: LN_PASSWORD secret is not set"
-            echo "Please set LN_PASSWORD in your repository secrets:"
-            echo "1. Go to Settings > Secrets and variables > Actions"
-            echo "2. Click 'New repository secret'"
-            echo "3. Add LN_PASSWORD with your LinkedIn password"
-            exit 1
-          fi
-          echo "✓ Required secrets are properly configured"
-
   apply-to-jobs:
-    needs: verify-secrets
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     steps:
       - name: Checkout repository
@@ -46,27 +21,48 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install -r requirements.txt
+          # Install Homebrew if not already installed
+          which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           
-      - name: Set up virtual display
+          # Update Homebrew and install dependencies
+          brew update
+          brew install python tk
+          
+          # Create Python virtual environment
+          python3 -m venv venv
+          source venv/bin/activate
+
+      - name: Set up Chrome
         run: |
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
-          echo "DISPLAY=:99.0" >> $GITHUB_ENV
+          # Install Chrome using Homebrew if not already installed
+          brew install --cask google-chrome || true
+          
+          # Get Chrome version
+          CHROME_VERSION=$(/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+          CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | cut -d. -f1)
+          echo "Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
+          echo "CHROME_VERSION=$CHROME_VERSION" >> $GITHUB_ENV
+          echo "CHROME_MAJOR_VERSION=$CHROME_MAJOR_VERSION" >> $GITHUB_ENV
+
+      - name: Set up ChromeDriver
+        run: |
+          # Install ChromeDriver using Homebrew
+          brew install --cask chromedriver || true
+          
+          # Set permissions and remove quarantine attribute
+          sudo xattr -d com.apple.quarantine /usr/local/bin/chromedriver || true
+          chmod +x /usr/local/bin/chromedriver
+          
+          # Verify installation
+          chromedriver --version
 
       - name: Configure for headless mode
         run: |
           # Create required directories
-          sudo mkdir -p /home/runner/Downloads
-          sudo chmod 777 /home/runner/Downloads
-          mkdir -p logs/screenshots
-          chmod -R 777 logs
+          mkdir -p ~/Downloads logs/screenshots "all excels" "all resumes/temp"
+          chmod -R 755 ~/Downloads logs "all excels" "all resumes"
           
           # Update settings.py for headless mode
           cat << EOF >> config/settings.py
@@ -81,28 +77,41 @@ jobs:
           keep_screen_awake = False
           stealth_mode = False
           showAiErrorAlerts = False
-          downloads_path = "/home/runner/Downloads"
+          downloads_path = os.path.expanduser("~/Downloads")
           EOF
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
 
       - name: Run LinkedIn Auto Job Applier
         env:
-          DISPLAY: ":99.0"
           GITHUB_ACTIONS: "true"
           CI: "true"
-          PYTHONPATH: "${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply"
-          DOWNLOADS_PATH: "/home/runner/Downloads"
+          PYTHONPATH: "${PYTHONPATH}:/Users/runner/work/LinkedJobApply/LinkedJobApply"
+          DOWNLOADS_PATH: "/Users/runner/Downloads"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LN_USERNAME: ${{ secrets.LN_USERNAME }}
           LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Print environment info (without exposing secrets)
           echo "Environment configuration:"
           echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
           echo "CI: $CI"
-          echo "DISPLAY: $DISPLAY"
           echo "PYTHONPATH: $PYTHONPATH"
           echo "DOWNLOADS_PATH: $DOWNLOADS_PATH"
           echo "LN_USERNAME is set: ${{ secrets.LN_USERNAME != '' }}"
           echo "LN_PASSWORD is set: ${{ secrets.LN_PASSWORD != '' }}"
           
           python runAiBot.py
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: application-logs
+          path: |
+            logs/
+            all excels/
+          retention-days: 7
