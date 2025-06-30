@@ -22,7 +22,7 @@ version:    24.12.29.12.30
 default_resume_path = "/Users/mkuma929/Downloads/NewManishResumeWithOptum.pdf"      # (In Development)
 
 # What do you want to answer for questions that ask about years of experience you have, this is different from current_experience? 
-years_of_experience = "13"          # A number in quotes Eg: "0","1","2","3","4", etc.
+years_of_experience = "13"          # A number in quotes Eg: "0", "1", "2", "3", "4", etc.
 
 # Do you need visa sponsorship now or in future?
 require_visa = "No"               # "Yes" or "No"
@@ -114,7 +114,7 @@ Note: If left empty as "", the tool will not answer the question. However, note 
 recent_employer = "Not Applicable" # "", "Lala Company", "Google", "Snowflake", "Databricks"
 
 # Example question: "On a scale of 1-10 how much experience do you have building web or mobile applications? 1 being very little or only in school, 10 being that you have built and launched applications to real users"
-confidence_level = "8"             # Any number between "1" to "10" including 1 and 10, put it in quotes ""
+confidence_level = "8"             # Any number between "1" to "10" including 1 and 10, in quotes
 ##
 
 

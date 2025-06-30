@@ -26,48 +26,22 @@ if ! [ -d "/Applications/Google Chrome.app" ]; then
     brew install --cask google-chrome
 fi
 
-# Get Chrome version and download matching ChromeDriver
-CHROME_VERSION=$(/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version | awk '{print $3}' | awk -F'.' '{print $1}')
+# Get Chrome version
+CHROME_VERSION=$(defaults read /Applications/Google\ Chrome.app/Contents/Info.plist CFBundleShortVersionString | cut -d. -f1)
 echo "Chrome version detected: $CHROME_VERSION"
 
-# Try to get matching ChromeDriver version
-CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHROME_VERSION")
+# Install ChromeDriver using Homebrew
+echo "Installing ChromeDriver using Homebrew..."
+brew install --cask chromedriver
 
-if [ -z "$CHROMEDRIVER_VERSION" ]; then
-    echo "No exact match found for Chrome version $CHROME_VERSION, trying previous version..."
-    CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$(($CHROME_VERSION-1))")
-fi
-
-if [ -z "$CHROMEDRIVER_VERSION" ]; then
-    echo "Failed to find compatible ChromeDriver version"
-    exit 1
-fi
-
-echo "Installing ChromeDriver version: $CHROMEDRIVER_VERSION"
-
-# Determine Mac architecture and set platform
-if [ "$(uname -m)" = "arm64" ]; then
-    PLATFORM="mac_arm64"
+# Verify ChromeDriver installation
+if [ -f "/opt/homebrew/bin/chromedriver" ]; then
+    echo "ChromeDriver installed successfully!"
+    echo "Setting permissions..."
+    chmod +x /opt/homebrew/bin/chromedriver
 else
-    PLATFORM="mac64"
-fi
-
-# Create local bin directory if it doesn't exist
-mkdir -p ~/.local/bin
-
-# Download and install ChromeDriver
-echo "Downloading ChromeDriver for $PLATFORM..."
-curl -Lo chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/$PLATFORM/chromedriver-$PLATFORM.zip"
-unzip -o chromedriver.zip
-mv chromedriver-$PLATFORM/chromedriver ~/.local/bin/
-chmod +x ~/.local/bin/chromedriver
-rm -rf chromedriver.zip chromedriver-$PLATFORM
-
-# Add ~/.local/bin to PATH if not already there
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    export PATH="$HOME/.local/bin:$PATH"
+    echo "Error: ChromeDriver installation failed"
+    exit 1
 fi
 
 # Create required directories
