@@ -1,0 +1,82 @@
+name: LinkedIn Auto Job Applier macOS
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  apply-to-jobs:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          # Install Homebrew if not already installed
+          which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          
+          # Make sure Homebrew is in PATH
+          echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          
+          # Install Chrome and ChromeDriver
+          brew install --cask google-chrome chromedriver
+          
+          # Set up directories
+          mkdir -p ~/Downloads logs/screenshots "all excels" "all resumes/temp"
+          chmod -R 755 ~/Downloads logs "all excels" "all resumes"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+
+      - name: Configure for headless mode
+        run: |
+          # Update settings.py for headless mode
+          cat << EOF >> config/settings.py
+          
+          # Headless mode configuration for GitHub Actions on macOS
+          import os
+          running_in_actions = True
+          run_in_background = True
+          safe_mode = True
+          disable_extensions = True
+          smooth_scroll = False
+          keep_screen_awake = False
+          stealth_mode = False
+          showAiErrorAlerts = False
+          downloads_path = os.path.expanduser("~/Downloads")
+          EOF
+
+      - name: Run LinkedIn Auto Job Applier
+        env:
+          GITHUB_ACTIONS: "true"
+          CI: "true"
+          PYTHONPATH: "${PYTHONPATH}:/Users/runner/work/LinkedJobApply/LinkedJobApply"
+          DOWNLOADS_PATH: "/Users/runner/Downloads"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+        run: python runAiBot.py
+
+      - name: Upload logs and results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: application-logs
+          path: |
+            logs/
+            all excels/
+            all resumes/
+          retention-days: 7
