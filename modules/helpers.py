@@ -66,15 +66,28 @@ def find_default_profile_directory() -> str | None:
     '''
     Function to search for Chrome Profiles within default locations
     '''
-    default_locations = [
-        r"%LOCALAPPDATA%\Google\Chrome\User Data",
-        r"%USERPROFILE%\AppData\Local\Google\Chrome\User Data",
-        r"%USERPROFILE%\Local Settings\Application Data\Google\Chrome\User Data"
-    ]
-    for location in default_locations:
-        profile_dir = os.path.expandvars(location)
-        if os.path.exists(profile_dir):
-            return profile_dir
+    import platform
+    system = platform.system().lower()
+    
+    if system == 'darwin':  # macOS
+        default_locations = [
+            "~/Library/Application Support/Google/Chrome/Default",
+            "~/Library/Application Support/Google/Chrome/Profile 1"
+        ]
+        for location in default_locations:
+            profile_dir = os.path.expanduser(location)
+            if os.path.exists(profile_dir):
+                return profile_dir
+    else:  # Windows and Linux
+        default_locations = [
+            r"%LOCALAPPDATA%\Google\Chrome\User Data",
+            r"%USERPROFILE%\AppData\Local\Google\Chrome\User Data",
+            r"%USERPROFILE%\Local Settings\Application Data\Google\Chrome\User Data"
+        ]
+        for location in default_locations:
+            profile_dir = os.path.expandvars(location)
+            if os.path.exists(profile_dir):
+                return profile_dir
     return None
 #>
 

@@ -1,0 +1,155 @@
+name: LinkedIn Auto Job Applier V3
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  apply-to-jobs:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          # Install Homebrew if not already installed
+          which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          
+          # Install required system packages
+          brew install wget python tk scrot
+          
+          # Create Python virtual environment
+          python3 -m venv venv
+          source venv/bin/activate
+
+      - name: Set up Chrome
+        run: |
+          # Install Chrome using Homebrew if not already installed
+          brew install --cask google-chrome
+          
+          # Get Chrome version
+          CHROME_VERSION=$(/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+          CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION" | cut -d. -f1)
+          echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)"
+          echo "CHROME_VERSION=$CHROME_VERSION" >> $GITHUB_ENV
+          echo "CHROME_MAJOR_VERSION=$CHROME_MAJOR_VERSION" >> $GITHUB_ENV
+
+      - name: Set up ChromeDriver
+        run: |
+          # Install ChromeDriver using Homebrew
+          brew install --cask chromedriver
+          
+          # Set permissions
+          sudo xattr -d com.apple.quarantine /usr/local/bin/chromedriver
+          chmod +x /usr/local/bin/chromedriver
+          
+          # Verify installation
+          echo "ChromeDriver version:"
+          chromedriver --version
+          
+          # Store ChromeDriver version
+          CHROMEDRIVER_VERSION=$(chromedriver --version | awk '/ChromeDriver/ {print $2}')
+          echo "CHROMEDRIVER_VERSION=$CHROMEDRIVER_VERSION" >> $GITHUB_ENV
+
+      - name: Set up project directories
+        run: |
+          # Create and set permissions for required directories
+          mkdir -p ~/Downloads logs/screenshots "all excels" "all resumes/temp"
+          chmod -R 755 ~/Downloads logs "all excels" "all resumes"
+          
+          # Verify directory setup
+          ls -la ~/Downloads logs "all excels" "all resumes"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+
+      - name: Configure for headless mode
+        run: |
+          # Update settings.py for headless mode
+          cat << EOF >> config/settings.py
+          
+          # Headless mode configuration for GitHub Actions
+          import os
+          running_in_actions = True
+          run_in_background = True
+          safe_mode = True
+          disable_extensions = True
+          smooth_scroll = False
+          keep_screen_awake = False
+          stealth_mode = False
+          showAiErrorAlerts = False
+          downloads_path = os.path.expanduser("~/Downloads")  # Set downloads path for macOS
+          EOF
+
+      - name: Update credentials
+        run: |
+          python -c "
+          import os
+          
+          # Read current content
+          with open('config/secrets.py', 'r') as f:
+              content = f.read()
+          
+          # Update the content
+          if 'username = os.environ.get(\"LN_USERNAME\"' not in content:
+              with open('config/secrets.py', 'a') as f:
+                  f.write('\n# Auto-inserted by GitHub Actions\n')
+                  f.write('username = os.environ.get(\"LN_USERNAME\", \"\")\n')
+                  f.write('password = os.environ.get(\"LN_PASSWORD\", \"\")\n')
+          "
+
+      - name: Verify environment
+        run: |
+          echo "System information:"
+          uname -a
+          echo "Directory structure:"
+          ls -R
+          echo "Chrome version:"
+          google-chrome --version
+          echo "ChromeDriver version:"
+          chromedriver --version
+          echo "Python version:"
+          python --version
+          echo "Display:"
+          echo $DISPLAY
+          echo "ChromeDriver location:"
+          which chromedriver
+          echo "Chrome binary location:"
+          which google-chrome
+
+      - name: Run LinkedIn Auto Job Applier
+        env:
+          DISPLAY: ":99.0"
+          GITHUB_ACTIONS: "true"
+          CI: "true"
+          PYTHONPATH: "${PYTHONPATH}:/home/runner/work/LinkedJobApply/LinkedJobApply"
+          DOWNLOADS_PATH: "/home/runner/Downloads"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LN_USERNAME: ${{ secrets.LN_USERNAME }}
+          LN_PASSWORD: ${{ secrets.LN_PASSWORD }}
+          CHROME_VERSION: ${{ env.CHROME_VERSION }}
+          CHROMEDRIVER_VERSION: ${{ env.CHROMEDRIVER_VERSION }}
+          IS_CHROME_FOR_TESTING: ${{ env.IS_CHROME_FOR_TESTING }}
+        run: |
+          # Print environment info
+          echo "Python path: $PYTHONPATH"
+          echo "Downloads path: $DOWNLOADS_PATH"
+          echo "Chrome version: $CHROME_VERSION"
+          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          echo "Using Chrome for Testing: $IS_CHROME_FOR_TESTING"
+          
+          # Run the bot
+          python runAiBot.py
