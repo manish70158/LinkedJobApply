@@ -23,15 +23,9 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          # Install Homebrew if not already installed
+          # Install required system packages (skip desktop applications like agentkube in CI)
           which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          
-          # Install required system packages
           brew install wget python tk scrot
-          
-          # Create Python virtual environment
-          python3 -m venv venv
-          source venv/bin/activate
 
       - name: Set up Chrome
         run: |
