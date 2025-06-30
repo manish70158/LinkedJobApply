@@ -12,6 +12,12 @@ jobs:
     runs-on: self-hosted
     
     steps:
+      - name: Set up tool cache
+        run: |
+          sudo mkdir -p /Users/runner/hostedtoolcache
+          sudo chown $USER:staff /Users/runner/hostedtoolcache
+          chmod 775 /Users/runner/hostedtoolcache
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -20,6 +26,8 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          check-latest: false
 
       - name: Install system dependencies
         run: |
