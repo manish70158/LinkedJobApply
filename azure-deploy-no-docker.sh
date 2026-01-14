@@ -1,19 +1,18 @@
 #!/bin/bash
-# Azure deployment script for LinkedIn Auto Job Applier
+# Direct deployment to Azure using ACR build (bypasses local Docker issues)
 
 set -e
 
 echo "========================================"
-echo "LinkedIn Auto Job Applier - Azure Deploy"
+echo "Azure Direct Deploy (No Local Docker)"
 echo "========================================"
 echo ""
 
 # Configuration
 RESOURCE_GROUP="${RESOURCE_GROUP:-linkedin-bot-rg}"
 LOCATION="${LOCATION:-eastus}"
-ACR_NAME="${ACR_NAME:-linkedinbotacr$(date +%s)}"
+ACR_NAME="linkedinbotacr$(date +%s | tail -c 6)"
 IMAGE_NAME="linkedin-job-applier"
-IMAGE_TAG="${IMAGE_TAG:-latest}"
 
 # Check if Azure CLI is installed
 if ! command -v az &> /dev/null; then
@@ -22,17 +21,15 @@ if ! command -v az &> /dev/null; then
     exit 1
 fi
 
-# Login to Azure (if not already logged in)
+# Login to Azure
 echo "Checking Azure login status..."
 az account show &> /dev/null || {
     echo "Please login to Azure..."
     az login
 }
 
-# Get subscription info
-SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 SUBSCRIPTION_NAME=$(az account show --query name -o tsv)
-echo "Using subscription: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
+echo "✓ Using subscription: $SUBSCRIPTION_NAME"
 echo ""
 
 # Create resource group
@@ -51,33 +48,25 @@ az acr create \
 echo "✓ Container Registry created"
 echo ""
 
-# Get ACR credentials
+# Build image directly in Azure (no local Docker required!)
+echo "Building Docker image in Azure Container Registry..."
+echo "This bypasses any local Docker issues!"
+echo ""
+
+az acr build \
+    --registry $ACR_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --image $IMAGE_NAME:latest \
+    --file Dockerfile.azure \
+    .
+
+echo ""
+echo "✓ Image built successfully in Azure!"
+echo ""
+
+# Get ACR details
 ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
-ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query username -o tsv)
-ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query passwords[0].value -o tsv)
-
 echo "ACR Login Server: $ACR_LOGIN_SERVER"
-echo ""
-
-# Build and push Docker image to ACR
-echo "Building Docker image..."
-docker build -f Dockerfile.azure -t $IMAGE_NAME:$IMAGE_TAG .
-echo "✓ Docker image built"
-echo ""
-
-echo "Tagging image for ACR..."
-docker tag $IMAGE_NAME:$IMAGE_TAG $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
-echo "✓ Image tagged"
-echo ""
-
-echo "Logging into ACR..."
-echo $ACR_PASSWORD | docker login $ACR_LOGIN_SERVER --username $ACR_USERNAME --password-stdin
-echo "✓ Logged into ACR"
-echo ""
-
-echo "Pushing image to ACR..."
-docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
-echo "✓ Image pushed to ACR"
 echo ""
 
 # Prompt for secrets
@@ -107,21 +96,19 @@ echo "Deployment mode: $RUN_MODE"
 echo ""
 
 # Deploy using Bicep
-echo "Deploying infrastructure using Bicep..."
+echo "Deploying infrastructure..."
 az deployment group create \
     --resource-group $RESOURCE_GROUP \
     --template-file azure-deploy.bicep \
     --parameters \
         namePrefix=linkedinbot \
-        containerImage=$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG \
-        linkedinUsername=$LN_USERNAME \
-        linkedinPassword=$LN_PASSWORD \
-        geminiApiKey=$GEMINI_API_KEY \
-        runMode=$RUN_MODE \
-        cpuCores=2 \
-        memoryInGb=4
+        containerImage=$ACR_LOGIN_SERVER/$IMAGE_NAME:latest \
+        linkedinUsername="$LN_USERNAME" \
+        linkedinPassword="$LN_PASSWORD" \
+        geminiApiKey="$GEMINI_API_KEY" \
+        runMode=$RUN_MODE
 
-echo "✓ Infrastructure deployed"
+echo "✓ Deployment complete!"
 echo ""
 
 # Get outputs
@@ -154,18 +141,9 @@ fi
 
 echo ""
 echo "========================================"
-echo "Useful Commands"
+echo "Monitor Your Deployment"
 echo "========================================"
 echo "View logs:"
-echo "  az container logs --resource-group $RESOURCE_GROUP --name $CONTAINER_GROUP_NAME"
+echo "  az container logs --resource-group $RESOURCE_GROUP --name $CONTAINER_GROUP_NAME --follow"
 echo ""
-echo "View container status:"
-echo "  az container show --resource-group $RESOURCE_GROUP --name $CONTAINER_GROUP_NAME"
-echo ""
-echo "Download logs from Azure Storage:"
-echo "  az storage blob download-batch -d ./downloaded-logs -s linkedin-bot-data --account-name $STORAGE_ACCOUNT"
-echo ""
-echo "Delete deployment:"
-echo "  az group delete --name $RESOURCE_GROUP --yes"
-echo ""
-echo "✓ Deployment complete!"
+echo "✓ All done! Your bot is now running in Azure!"
