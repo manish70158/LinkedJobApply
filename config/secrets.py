@@ -40,8 +40,11 @@ def get_required_env_var(var_name: str, min_length: int = 5) -> str:
     return value
 
 # Get credentials with proper error handling
-username = get_required_env_var("LN_USERNAME")
-password = get_required_env_var("LN_PASSWORD")
+# username = get_required_env_var("LN_USERNAME")
+# password = get_required_env_var("LN_PASSWORD")
+
+username = "a.manish1689@gmail.com"
+password = "Haryanao@123"
 
 # Debug output for GitHub Actions
 if os.environ.get('GITHUB_ACTIONS') == 'true':
@@ -67,7 +70,7 @@ CHECK THE OPENAI API PIRCES AT THEIR WEBSITE (https://openai.com/api/pricing/).
 
 ##> ------ Yang Li : MARKYangL - Feature ------
 # Select AI Provider
-ai_provider = "gemini"               # "openai", "deepseek", "ollama", "gemini"
+ai_provider = "ollama"               # "openai", "deepseek", "ollama", "gemini"
 '''
 Note: Select your AI provider.
 * "openai" - OpenAI API (GPT models)
@@ -80,8 +83,8 @@ Note: Select your AI provider.
 # Gemini Configuration
 import os
 # Try to get API key from environment variable first, fall back to hardcoded value
-gemini_api_key = os.environ.get("GEMINI_API_KEY", "")  # Get API key from environment variable
-gemini_model = "gemini-1.5-flash"              # Using faster model which may be more reliable
+gemini_api_key = os.environ.get("GEMINI_API_KEY", "AIzaSyBscr8qdwTKxJpI1UgVX2FEhLFypBu8vOw")  # Get API key from environment variable
+gemini_model = "gemini-2.5-flash"              # Using faster model which may be more reliable
 showAiErrorAlerts = False                       # Show error alerts to help with debugging
 '''
 Note: Gemini API model selection
@@ -97,7 +100,7 @@ When running on GitHub Actions, set the GEMINI_API_KEY secret in your repository
 # Your Local LLM url or other AI api url and port
 llm_api_url = "http://localhost:11434"  # Ollama's default API endpoint
 llm_api_key = ""  # Leave empty for Ollama
-llm_model = "llama2:latest"  # Or any other model you have in Ollama
+llm_model = "deepseek-r1:latest"  # Or any other model you have in Ollama
 llm_spec = "openai-like"  # Keep this as "openai-like" for Ollama
 '''
 Note: Currently "openai" and "openai-like" api endpoints are supported.

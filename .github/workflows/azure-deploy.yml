@@ -1,0 +1,129 @@
+name: Deploy to Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      runMode:
+        description: 'Deployment mode'
+        required: true
+        default: 'continuous'
+        type: choice
+        options:
+          - single
+          - continuous
+          - dashboard
+      
+env:
+  AZURE_RESOURCE_GROUP: linkedin-bot-rg
+  AZURE_LOCATION: eastus
+  ACR_NAME: linkedinbotacr
+  IMAGE_NAME: linkedin-job-applier
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ env.AZURE_RESOURCE_GROUP }} \
+            --location ${{ env.AZURE_LOCATION }}
+
+      - name: Create Azure Container Registry
+        id: acr
+        run: |
+          # Create ACR with unique name
+          ACR_NAME="${{ env.ACR_NAME }}$(date +%s)"
+          az acr create \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name $ACR_NAME \
+            --sku Basic \
+            --admin-enabled true
+          
+          # Get ACR credentials
+          ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
+          echo "acr_name=$ACR_NAME" >> $GITHUB_OUTPUT
+          echo "acr_login_server=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Docker Image
+        run: |
+          # Login to ACR
+          az acr login --name ${{ steps.acr.outputs.acr_name }}
+          
+          # Build image
+          docker build -f Dockerfile.azure \
+            -t ${{ steps.acr.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest \
+            -t ${{ steps.acr.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            .
+          
+          # Push image
+          docker push ${{ steps.acr.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ steps.acr.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Azure Container Instances
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --template-file azure-deploy.bicep \
+            --parameters \
+              namePrefix=linkedinbot \
+              containerImage=${{ steps.acr.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest \
+              linkedinUsername="${{ secrets.LN_USERNAME }}" \
+              linkedinPassword="${{ secrets.LN_PASSWORD }}" \
+              geminiApiKey="${{ secrets.GEMINI_API_KEY }}" \
+              runMode=${{ github.event.inputs.runMode }} \
+              cpuCores=2 \
+              memoryInGb=4
+
+      - name: Get Deployment Info
+        id: deployment
+        run: |
+          CONTAINER_GROUP=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name azure-deploy \
+            --query properties.outputs.containerGroupName.value -o tsv)
+          
+          STORAGE_ACCOUNT=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name azure-deploy \
+            --query properties.outputs.storageAccountName.value -o tsv)
+          
+          echo "container_group=$CONTAINER_GROUP" >> $GITHUB_OUTPUT
+          echo "storage_account=$STORAGE_ACCOUNT" >> $GITHUB_OUTPUT
+          
+          if [ "${{ github.event.inputs.runMode }}" = "dashboard" ]; then
+            DASHBOARD_URL=$(az deployment group show \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name azure-deploy \
+              --query properties.outputs.dashboardUrl.value -o tsv)
+            echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Display Deployment Summary
+        run: |
+          echo "### Azure Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Resource Group:** ${{ env.AZURE_RESOURCE_GROUP }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Container Registry:** ${{ steps.acr.outputs.acr_login_server }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Container Group:** ${{ steps.deployment.outputs.container_group }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Storage Account:** ${{ steps.deployment.outputs.storage_account }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Mode:** ${{ github.event.inputs.runMode }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.runMode }}" = "dashboard" ]; then
+            echo "**Dashboard URL:** ${{ steps.deployment.outputs.dashboard_url }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### View Logs" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "az container logs --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.deployment.outputs.container_group }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

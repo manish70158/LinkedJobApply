@@ -1,0 +1,62 @@
+# Dockerfile optimized for Azure Container Instances
+FROM python:3.10-slim-bullseye
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for Chrome and browser automation
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg2 \
+    software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    xvfb \
+    x11vnc \
+    fluxbox \
+    procps \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Verify Chrome installation
+RUN google-chrome --version
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional dependencies for Azure
+RUN pip install --no-cache-dir python-dotenv azure-storage-blob schedule
+
+# Copy application files
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs/screenshots "all excels" "all resumes/temp" /root/Downloads \
+    && chmod -R 755 logs "all excels" "all resumes"
+
+# Set environment variables
+ENV DISPLAY=:99
+ENV PYTHONUNBUFFERED=1
+ENV RUNNING_IN_AZURE=true
+
+# Make startup script executable
+RUN chmod +x azure-start.sh
+
+# Expose port for Flask dashboard (optional)
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)"
+
+# Start the application
+CMD ["./azure-start.sh"]

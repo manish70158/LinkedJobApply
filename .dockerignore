@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Logs and data (will be persisted in Azure Storage)
+logs/
+*.log
+all excels/
+recordings/
+
+# Test files
+test.py
+test_*.py
+
+# Documentation
+README.md
+*.md
+!AZURE_DEPLOYMENT.md
+
+# GitHub Actions
+actions-runner/
+
+# Local config (secrets should be in Azure)
+.env
+.env.local
+
+# Chrome drivers (will be downloaded in container)
+chromedriver-linux64/
+chromedriver-mac-arm64/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
